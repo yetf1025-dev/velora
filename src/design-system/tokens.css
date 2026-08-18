@@ -1,0 +1,86 @@
+/**
+ * Velora Design Tokens
+ * 所有视觉决策的唯一来源。Light / Dark / Sepia / 高对比全部通过 Token 切换。
+ * 新增颜色禁止绕过 Token 直接写字面值。
+ */
+
+:root {
+  /* 表面 */
+  --vl-bg: #ffffff;
+  --vl-panel: #f7f7f8;
+  --vl-panel-active: #efeff1;
+  --vl-overlay: rgba(255, 255, 255, 0.92);
+
+  /* 边框 */
+  --vl-border: #e4e4e7;
+  --vl-border-strong: #d4d4d8;
+
+  /* 文字 */
+  --vl-text: #18181b;
+  --vl-text-muted: #71717a;
+  --vl-text-faint: #a1a1aa;
+
+  /* 强调 */
+  --vl-accent: #4f46e5;
+  --vl-accent-soft: rgba(79, 70, 229, 0.1);
+  --vl-accent-text: #4338ca;
+
+  /* 语义 */
+  --vl-danger: #dc2626;
+  --vl-warning: #d97706;
+  --vl-success: #16a34a;
+
+  /* 编辑器 */
+  --vl-editor-bg: var(--vl-bg);
+  --vl-editor-width: 760px;
+  --vl-editor-padding: 48px;
+  --vl-code-bg: #f4f4f5;
+  --vl-code-text: #18181b;
+  --vl-selection: rgba(79, 70, 229, 0.15);
+  --vl-caret: var(--vl-accent);
+
+  /* 形状与动效 */
+  --vl-radius: 6px;
+  --vl-radius-lg: 10px;
+  --vl-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --vl-transition: 120ms ease;
+
+  /* 字体 */
+  --vl-font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --vl-font-prose: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+  --vl-font-mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --vl-bg: #161618;
+  --vl-panel: #1e1e21;
+  --vl-panel-active: #27272b;
+  --vl-overlay: rgba(22, 22, 24, 0.92);
+
+  --vl-border: #2e2e33;
+  --vl-border-strong: #3f3f46;
+
+  --vl-text: #e4e4e7;
+  --vl-text-muted: #a1a1aa;
+  --vl-text-faint: #52525b;
+
+  --vl-accent: #818cf8;
+  --vl-accent-soft: rgba(129, 140, 248, 0.14);
+  --vl-accent-text: #a5b4fc;
+
+  --vl-danger: #f87171;
+  --vl-warning: #fbbf24;
+  --vl-success: #4ade80;
+
+  --vl-code-bg: #202023;
+  --vl-code-text: #e4e4e7;
+  --vl-selection: rgba(129, 140, 248, 0.22);
+
+  --vl-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+}
+
+/* 预留:Sepia / 高对比主题在此追加 :root[data-theme="sepia"] 块即可 */

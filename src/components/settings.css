@@ -1,0 +1,97 @@
+/**
+ * 设置对话框样式
+ */
+
+.vl-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 40;
+}
+
+.vl-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  max-width: 90vw;
+  padding: 16px 18px;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-bg);
+  box-shadow: var(--vl-shadow);
+  z-index: 50;
+}
+
+.vl-dialog-close {
+  display: flex;
+  padding: 4px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: transparent;
+  color: var(--vl-text-muted);
+  cursor: pointer;
+}
+
+.vl-dialog-close:hover {
+  background: var(--vl-panel-active);
+}
+
+.vl-settings-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vl-border);
+}
+
+.vl-settings-label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vl-text-muted);
+}
+
+.vl-settings-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius);
+  background: var(--vl-bg);
+  color: var(--vl-text);
+  font-size: 12px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vl-settings-input:focus {
+  border-color: var(--vl-accent);
+}
+
+/* ── 选项卡结构 ────────────────────── */
+.vl-settings-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--vl-border);
+}
+
+.vl-settings-tab {
+  padding: 6px 14px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--vl-text-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color var(--vl-transition);
+}
+
+.vl-settings-tab[data-state="active"] {
+  color: var(--vl-accent-text);
+  border-bottom-color: var(--vl-accent);
+  font-weight: 600;
+}
+
+.vl-settings-body {
+  padding: 14px 2px 4px;
+  min-height: 220px;
+}

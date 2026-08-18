@@ -1,0 +1,76 @@
+/**
+ * Context AI 工具栏样式
+ */
+
+.vl-ai-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-panel);
+  box-shadow: var(--vl-shadow);
+}
+
+.vl-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: transparent;
+  color: var(--vl-text);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vl-ai-btn:hover {
+  background: var(--vl-accent-soft);
+  color: var(--vl-accent-text);
+}
+
+.vl-ai-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.vl-ai-result {
+  max-width: 420px;
+}
+
+.vl-ai-result-text {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--vl-text);
+  white-space: pre-wrap;
+}
+
+.vl-ai-error {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--vl-danger);
+}
+
+.vl-ai-actions {
+  display: flex;
+  gap: 2px;
+  border-top: 1px solid var(--vl-border);
+  padding-top: 4px;
+  margin-top: 4px;
+}
+
+.vl-ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--vl-accent-text);
+  white-space: nowrap;
+}

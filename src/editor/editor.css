@@ -1,0 +1,236 @@
+/**
+ * Velora 编辑器排版主题 —— 全部基于 Design Token。
+ * WYSIWYG 核心:Markdown 标记符号不显示,内容即最终形态。
+ */
+
+.velora-editor {
+  font-family: var(--vl-font-prose);
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--vl-text);
+  outline: none;
+  caret-color: var(--vl-caret);
+}
+
+.velora-editor .ProseMirror {
+  outline: none;
+}
+
+/* ── 标题 ─────────────────────────── */
+.velora-editor h1 {
+  font-size: 1.9em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.4em 0 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--vl-border);
+}
+.velora-editor h2 {
+  font-size: 1.5em;
+  font-weight: 650;
+  line-height: 1.35;
+  margin: 1.3em 0 0.5em;
+}
+.velora-editor h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 1.2em 0 0.4em;
+}
+.velora-editor h4,
+.velora-editor h5,
+.velora-editor h6 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin: 1.1em 0 0.4em;
+  color: var(--vl-text);
+}
+.velora-editor h1:first-child,
+.velora-editor h2:first-child,
+.velora-editor h3:first-child {
+  margin-top: 0;
+}
+
+/* ── 段落与行内 ────────────────────── */
+.velora-editor p {
+  margin: 0.7em 0;
+}
+
+.velora-editor strong {
+  font-weight: 650;
+}
+
+.velora-editor a {
+  color: var(--vl-accent-text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--vl-accent-soft);
+  cursor: pointer;
+}
+.velora-editor a:hover {
+  border-bottom-color: var(--vl-accent);
+}
+
+.velora-editor code {
+  font-family: var(--vl-font-mono);
+  font-size: 0.875em;
+  background: var(--vl-code-bg);
+  color: var(--vl-code-text);
+  padding: 0.15em 0.35em;
+  border-radius: var(--vl-radius);
+}
+
+/* ── 引用 ─────────────────────────── */
+.velora-editor blockquote {
+  margin: 1em 0;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 3px solid var(--vl-border-strong);
+  color: var(--vl-text-muted);
+}
+
+/* ── 列表 ─────────────────────────── */
+/* Tailwind preflight 会把 list-style 重置为 none,这里显式补回 */
+.velora-editor ul,
+.velora-editor ol {
+  margin: 0.7em 0;
+  padding-left: 1.6em;
+}
+.velora-editor ul {
+  list-style: disc;
+}
+.velora-editor ul ul {
+  list-style: circle;
+}
+.velora-editor ul ul ul {
+  list-style: square;
+}
+.velora-editor ol {
+  list-style: decimal;
+}
+.velora-editor li {
+  margin: 0.25em 0;
+}
+.velora-editor li p {
+  margin: 0.25em 0;
+}
+
+/* 任务列表 */
+.velora-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.4em;
+}
+.velora-editor ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.velora-editor ul[data-type="taskList"] li > label {
+  margin-top: 0.35em;
+  accent-color: var(--vl-accent);
+}
+.velora-editor ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--vl-text-faint);
+  text-decoration: line-through;
+}
+
+/* ── 代码块 ────────────────────────── */
+.velora-editor pre {
+  font-family: var(--vl-font-mono);
+  font-size: 0.875em;
+  line-height: 1.6;
+  background: var(--vl-code-bg);
+  color: var(--vl-code-text);
+  padding: 14px 18px;
+  border-radius: var(--vl-radius-lg);
+  border: 1px solid var(--vl-border);
+  overflow-x: auto;
+  margin: 1em 0;
+}
+.velora-editor pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ── 表格 ─────────────────────────── */
+.velora-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.925em;
+}
+.velora-editor th,
+.velora-editor td {
+  border: 1px solid var(--vl-border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+.velora-editor th {
+  background: var(--vl-panel);
+  font-weight: 600;
+}
+.velora-editor .selectedCell {
+  background: var(--vl-accent-soft);
+}
+.velora-editor .column-resize-handle {
+  background: var(--vl-accent);
+}
+
+/* ── 其他块 ────────────────────────── */
+.velora-editor hr {
+  border: none;
+  border-top: 1px solid var(--vl-border-strong);
+  margin: 2em 0;
+}
+
+.velora-editor img {
+  max-width: 100%;
+  border-radius: var(--vl-radius);
+}
+
+/* 空文档占位 */
+.velora-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--vl-text-faint);
+}
+
+/* ── 块操作手柄 ────────────────────── */
+.vl-block-handle {
+  position: absolute;
+  z-index: 20;
+}
+
+.vl-block-handle-btn {
+  display: flex;
+  align-items: center;
+  padding: 4px 3px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: transparent;
+  color: var(--vl-text-faint);
+  cursor: grab;
+  transition: color var(--vl-transition), background var(--vl-transition);
+}
+
+.vl-block-handle-btn:hover {
+  background: var(--vl-panel-active);
+  color: var(--vl-text-muted);
+}
+
+/* ── 原位源码标记(Typora 式)───────── */
+.vl-md-marker {
+  color: var(--vl-text-faint);
+  font-family: var(--vl-font-mono);
+  font-size: 0.85em;
+  user-select: none;
+}
+
+.vl-md-srcblock::before {
+  content: attr(data-mdmarker);
+  color: var(--vl-text-faint);
+  font-weight: 400;
+  font-size: 0.6em;
+  user-select: none;
+}

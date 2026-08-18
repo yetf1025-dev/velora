@@ -1,0 +1,49 @@
+/**
+ * TOC 目录节点样式
+ */
+
+.vl-toc {
+  margin: 1em 0;
+  padding: 14px 18px;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-panel);
+  user-select: none;
+}
+
+.vl-toc[data-selected] {
+  border-color: var(--vl-accent);
+  box-shadow: 0 0 0 3px var(--vl-accent-soft);
+}
+
+.vl-toc-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vl-text-muted);
+  margin-bottom: 6px;
+}
+
+.vl-toc-empty {
+  font-size: 13px;
+  color: var(--vl-text-faint);
+}
+
+.vl-toc-item {
+  display: block;
+  width: 100%;
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: transparent;
+  font-size: 13.5px;
+  text-align: left;
+  color: var(--vl-accent-text);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vl-toc-item:hover {
+  background: var(--vl-accent-soft);
+}

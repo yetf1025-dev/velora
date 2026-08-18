@@ -1,0 +1,89 @@
+/**
+ * Mermaid 节点样式 —— 隔离容器,不受文档排版 CSS 影响。
+ */
+
+.vl-mermaid {
+  position: relative;
+  margin: 1em 0;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-panel);
+  transition: border-color var(--vl-transition);
+}
+
+.vl-mermaid:hover {
+  border-color: var(--vl-border-strong);
+}
+
+.vl-mermaid[data-selected] {
+  border-color: var(--vl-accent);
+  box-shadow: 0 0 0 3px var(--vl-accent-soft);
+}
+
+.vl-mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.vl-mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.vl-mermaid-edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: var(--vl-overlay);
+  color: var(--vl-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--vl-transition);
+}
+
+.vl-mermaid:hover .vl-mermaid-edit {
+  opacity: 1;
+}
+
+.vl-mermaid-edit:hover {
+  color: var(--vl-accent);
+}
+
+.vl-mermaid-source {
+  display: block;
+  width: 100%;
+  min-height: 140px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-code-bg);
+  color: var(--vl-code-text);
+  font-family: var(--vl-font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vl-mermaid-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--vl-radius-lg);
+  background: transparent;
+  color: var(--vl-warning);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}

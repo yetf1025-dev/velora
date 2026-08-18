@@ -1,0 +1,266 @@
+/**
+ * SVG 节点样式 —— 隔离容器,不被文档排版 CSS 污染。
+ */
+
+.vl-svg {
+  position: relative;
+  margin: 1em 0;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-bg);
+  transition: border-color var(--vl-transition);
+  /* 与文档排版隔离 */
+  isolation: isolate;
+}
+
+.vl-svg:hover {
+  border-color: var(--vl-border-strong);
+}
+
+.vl-svg[data-selected] {
+  border-color: var(--vl-accent);
+  box-shadow: 0 0 0 3px var(--vl-accent-soft);
+}
+
+.vl-svg-canvas {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  overflow-x: auto;
+  cursor: zoom-in;
+}
+
+.vl-svg-canvas svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.vl-svg-code {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: var(--vl-overlay);
+  color: var(--vl-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--vl-transition);
+}
+
+.vl-svg:hover .vl-svg-code {
+  opacity: 1;
+}
+
+.vl-svg-code:hover {
+  color: var(--vl-accent);
+}
+
+.vl-svg-editing {
+  padding: 8px;
+}
+
+.vl-svg-source {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+  padding: 12px 14px;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius);
+  background: var(--vl-code-bg);
+  color: var(--vl-code-text);
+  font-family: var(--vl-font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vl-svg-editing-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--vl-text-faint);
+  text-align: right;
+}
+
+.vl-svg-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  color: var(--vl-warning);
+  font-size: 13px;
+}
+
+/* ── SVG 画布编辑器 ────────────────── */
+/* 对话框尺寸走 SvgCanvasEditor 内联样式(避免样式表顺序问题) */
+
+.vl-canvas-host {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background:
+    repeating-conic-gradient(var(--vl-panel) 0% 25%, var(--vl-bg) 0% 50%)
+    0 0 / 16px 16px;
+  padding: 16px;
+}
+
+.vl-canvas-host svg [data-vl-sel="true"] {
+  outline: 1.5px dashed var(--vl-accent);
+  outline-offset: 2px;
+}
+
+.vl-canvas-host svg rect,
+.vl-canvas-host svg circle,
+.vl-canvas-host svg ellipse,
+.vl-canvas-host svg text,
+.vl-canvas-host svg path,
+.vl-canvas-host svg line,
+.vl-canvas-host svg polygon,
+.vl-canvas-host svg polyline {
+  cursor: move;
+}
+
+/* 缩放手柄 + 拖拽期间的选中保护 */
+.vl-resize-handle {
+  fill: var(--vl-accent);
+  stroke: #fff;
+  stroke-width: 1;
+  cursor: nwse-resize;
+}
+
+.vl-canvas-host {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.vl-canvas-host svg * {
+  -webkit-user-drag: none;
+}
+
+/* 连接点与框选 */
+.vl-conn-point {
+  fill: #fff;
+  stroke: var(--vl-accent);
+  stroke-width: 1.5;
+  cursor: crosshair;
+}
+
+.vl-conn-point:hover {
+  fill: var(--vl-accent);
+}
+
+.vl-marquee {
+  position: absolute;
+  border: 1px dashed var(--vl-accent);
+  background: var(--vl-accent-soft);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.vl-canvas-host {
+  position: relative;
+}
+
+/* 放大 overlay */
+.vl-svg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 48px;
+  cursor: zoom-out;
+}
+
+.vl-svg-overlay-content {
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: transform 80ms ease;
+}
+
+.vl-svg-overlay-content svg {
+  min-width: min-content;
+  min-height: min-content;
+}
+
+.vl-svg-overlay-content svg {
+  max-width: 100%;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  background: var(--vl-bg);
+  border-radius: var(--vl-radius-lg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.vl-svg-overlay-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--vl-transition);
+}
+
+.vl-svg-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 放大按钮(复用 code 按钮位置样式) */
+.vl-svg-zoom {
+  position: absolute;
+  top: 8px;
+  right: 32px;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: var(--vl-overlay);
+  color: var(--vl-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--vl-transition);
+}
+
+.vl-svg:hover .vl-svg-zoom {
+  opacity: 1;
+}
+
+.vl-svg-zoom:hover {
+  color: var(--vl-accent);
+}
+
+.vl-svg-canvas {
+  cursor: zoom-in;
+}
+
+/* 拖拽条:顶部细条承担 data-drag-handle,不吞 canvas 的点击 */
+.vl-svg-drag-strip {
+  height: 6px;
+  cursor: grab;
+  border-radius: var(--vl-radius-lg) var(--vl-radius-lg) 0 0;
+}
+
+.vl-svg-drag-strip:hover {
+  background: var(--vl-panel-active);
+}

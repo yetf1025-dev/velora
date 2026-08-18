@@ -1,0 +1,72 @@
+/**
+ * 右键菜单 / 下拉菜单样式(Radix ContextMenu & DropdownMenu 共用)
+ */
+
+.vl-context-menu {
+  min-width: 200px;
+  padding: 5px;
+  border: 1px solid var(--vl-border);
+  border-radius: 10px;
+  background: var(--vl-overlay);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 8px 28px rgba(0, 0, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+  transform-origin: top left;
+  animation: vl-menu-in 120ms ease-out;
+}
+
+@keyframes vl-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.vl-context-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--vl-text);
+  cursor: default;
+  outline: none;
+  user-select: none;
+  transition: background 80ms ease, color 80ms ease;
+}
+
+.vl-context-item[data-highlighted] {
+  background: var(--vl-accent);
+  color: #fff;
+}
+
+.vl-context-item[data-highlighted] .vl-context-shortcut {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.vl-context-item[data-disabled] {
+  color: var(--vl-text-faint);
+}
+
+.vl-context-shortcut {
+  font-size: 11px;
+  color: var(--vl-text-faint);
+  letter-spacing: 0.5px;
+}
+
+.vl-context-separator {
+  height: 1px;
+  margin: 5px 8px;
+  background: var(--vl-border);
+}

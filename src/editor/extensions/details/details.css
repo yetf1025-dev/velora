@@ -1,0 +1,53 @@
+/**
+ * Details 折叠块样式
+ */
+
+.vl-details {
+  margin: 0.8em 0;
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-bg);
+}
+
+.vl-details-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+}
+
+.vl-details-toggle {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: transparent;
+  color: var(--vl-text-muted);
+  cursor: pointer;
+}
+
+.vl-details-toggle:hover {
+  background: var(--vl-panel-active);
+  color: var(--vl-text);
+}
+
+.vl-details-summary {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--vl-font-prose);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vl-text);
+  outline: none;
+}
+
+.vl-details-summary::placeholder {
+  color: var(--vl-text-faint);
+}
+
+.vl-details-content {
+  padding: 0 16px 8px 34px;
+  border-top: 1px solid var(--vl-border);
+}

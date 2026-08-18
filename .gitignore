@@ -1,0 +1,35 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+src-tauri/target/
+src-tauri/gen/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 私有/本机内容(公司文档 fixture 与引用本机绝对路径的批量测试,勿提交)
+tests/compatibility/fixtures/ai-collab.md
+tests/compatibility/batch-*.test.ts
+tests/compatibility/real-files.test.ts
+
+# 本地环境
+.env
+.env.local

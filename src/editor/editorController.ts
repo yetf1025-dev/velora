@@ -137,6 +137,38 @@ export function loadMarkdownIntoEditor(markdown: string): void {
   useAppStore.getState().setDirty(true);
 }
 
+/**
+ * 把 AI 回复内容应用到编辑区(ADR-004:经 markdown 解析为 Document 节点)。
+ * - insert:插入到当前光标处
+ * - replace:替换当前选区(无选区时等同插入光标处)
+ */
+export function applyAiContent(
+  content: string,
+  mode: "insert" | "replace",
+): boolean {
+  if (!editorInstance) return false;
+  const { selection } = editorInstance.state;
+  const { from, to } = selection;
+  const hasSelection = to > from;
+  programmaticUpdate = true;
+  try {
+    if (mode === "replace" && hasSelection) {
+      editorInstance.commands.insertContentAt({ from, to }, content, {
+        contentType: "markdown",
+      });
+    } else {
+      editorInstance.commands.insertContentAt(to, `\n\n${content}\n\n`, {
+        contentType: "markdown",
+      });
+    }
+  } finally {
+    programmaticUpdate = false;
+  }
+  useAppStore.getState().setDirty(true);
+  scheduleAutoSave();
+  return true;
+}
+
 /** 重新加载当前文件(外部修改后);本地未保存修改会被覆盖 */
 export async function reloadCurrentFile(): Promise<void> {
   const { currentFilePath } = useAppStore.getState();

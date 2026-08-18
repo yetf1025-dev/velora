@@ -30,7 +30,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
   messages: [],
   loading: false,
   error: null,
-  withDocument: false,
+  withDocument: true,
   contexts: [],
 
   setWithDocument: (withDocument) => set({ withDocument }),

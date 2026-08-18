@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { marked } from "marked";
-import { FileText, Loader2, SendHorizonal, Trash2 } from "lucide-react";
+import { FileText, Loader2, SendHorizonal, Trash2, CornerDownRight, Replace, Copy } from "lucide-react";
 import { useAiChatStore } from "../ai/aiChatStore";
+import { applyAiContent, getEditor } from "../editor/editorController";
 
 /** AI 对话面板:多轮对话,可选择附带当前文档作为上下文 */
 export function AiChatPanel() {
@@ -9,9 +10,7 @@ export function AiChatPanel() {
     messages,
     loading,
     error,
-    withDocument,
     contexts,
-    setWithDocument,
     removeContext,
     clear,
     send,
@@ -36,20 +35,14 @@ export function AiChatPanel() {
         className="flex items-center justify-between border-b px-3 py-2"
         style={{ borderColor: "var(--vl-border)" }}
       >
-        <label
-          className="flex cursor-pointer items-center gap-1.5 text-[11px]"
-          style={{ color: "var(--vl-text-muted)" }}
-          title="把当前文档内容作为上下文发给 AI"
+        <span
+          className="flex items-center gap-1.5 text-[11px]"
+          style={{ color: "var(--vl-text-faint)" }}
+          title="AI 始终能看到你正在编辑的当前文档"
         >
-          <input
-            type="checkbox"
-            checked={withDocument}
-            onChange={(e) => setWithDocument(e.target.checked)}
-            style={{ accentColor: "var(--vl-accent)" }}
-          />
           <FileText size={11} />
-          附带当前文档
-        </label>
+          已附带当前文档
+        </span>
         <button
           type="button"
           className="rounded p-1 transition-colors hover:bg-[var(--vl-panel-active)]"
@@ -69,7 +62,7 @@ export function AiChatPanel() {
           >
             问任何关于文档的问题
             <br />
-            勾选上方「附带当前文档」可让 AI 看到全文
+            AI 可直接看到你正在编辑的当前文档
           </div>
         ) : (
           messages.map((m, i) => <Bubble key={i} role={m.role} content={m.content} />)
@@ -148,12 +141,59 @@ function Bubble({ role, content }: { role: string; content: string }) {
       </div>
     );
   }
+  return <AiBubble content={content} />;
+}
+
+/** AI 回复气泡:markdown 渲染 + 底部操作行(应用到编辑区) */
+function AiBubble({ content }: { content: string }) {
+  const [applied, setApplied] = useState<null | "insert" | "replace">(null);
+  const editor = getEditor();
+  const hasSelection = editor
+    ? editor.state.selection.to > editor.state.selection.from
+    : false;
+
   return (
-    <div
-      className="vl-chat-bubble-ai"
-      // AI 返回的 markdown 经 marked 渲染;已做最小化净化(本地应用场景)
-      dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-    />
+    <div>
+      <div
+        className="vl-chat-bubble-ai"
+        dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+      />
+      {content.trim() && (
+        <div className="vl-chat-actions">
+          <button
+            type="button"
+            className="vl-chat-action-btn"
+            title="插入到光标处"
+            onClick={() => {
+              if (applyAiContent(content, "insert")) setApplied("insert");
+            }}
+          >
+            <CornerDownRight size={11} />
+            {applied === "insert" ? "已插入" : "插入光标处"}
+          </button>
+          <button
+            type="button"
+            className="vl-chat-action-btn"
+            title="替换当前选区"
+            disabled={!hasSelection}
+            onClick={() => {
+              if (applyAiContent(content, "replace")) setApplied("replace");
+            }}
+          >
+            <Replace size={11} />
+            {applied === "replace" ? "已替换" : "替换选区"}
+          </button>
+          <button
+            type="button"
+            className="vl-chat-action-btn"
+            title="复制"
+            onClick={() => void navigator.clipboard.writeText(content)}
+          >
+            <Copy size={11} /> 复制
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

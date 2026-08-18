@@ -114,3 +114,35 @@
 .vl-chat-context-remove:hover {
   color: var(--vl-danger);
 }
+
+/* AI 回复气泡下方的应用操作行 */
+.vl-chat-actions {
+  display: flex;
+  gap: 4px;
+  margin: -2px 24px 6px 0;
+  padding-left: 4px;
+}
+
+.vl-chat-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border: 1px solid var(--vl-border);
+  border-radius: 999px;
+  background: var(--vl-bg);
+  color: var(--vl-text-muted);
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: all 80ms ease;
+}
+
+.vl-chat-action-btn:hover:not(:disabled) {
+  border-color: var(--vl-accent);
+  color: var(--vl-accent-text);
+}
+
+.vl-chat-action-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

@@ -4,18 +4,30 @@ import { Explorer } from "./Explorer";
 import { Outline } from "./Outline";
 import { GitPanel } from "./GitPanel";
 import { LinkCheckPanel } from "./LinkCheckPanel";
+import { usePanelResize } from "./usePanelResize";
 
 type Tab = "files" | "outline" | "git" | "check";
 
-/** 左侧面板:文件树 / 大纲 / Git 变更 / 检查 切换 */
+/** 左侧面板:文件树 / 大纲 / Git 变更 / 检查 切换;右缘可拖拽调宽 */
 export function SidePanel() {
   const [tab, setTab] = useState<Tab>("files");
+  const { width, onMouseDown } = usePanelResize("left", 224, 160, 520);
 
   return (
     <div
-      className="flex w-56 shrink-0 flex-col border-r"
-      style={{ borderColor: "var(--vl-border)", background: "var(--vl-panel)" }}
+      className="relative flex shrink-0 flex-col border-r"
+      style={{
+        width,
+        borderColor: "var(--vl-border)",
+        background: "var(--vl-panel)",
+      }}
     >
+      {/* 拖拽调宽手柄 */}
+      <div
+        className="vl-resize-handle-r"
+        onMouseDown={onMouseDown}
+        title="拖拽调整宽度"
+      />
       <div
         className="flex shrink-0 border-b"
         style={{ borderColor: "var(--vl-border)" }}

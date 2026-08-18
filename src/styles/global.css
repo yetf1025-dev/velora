@@ -23,3 +23,22 @@ body {
 ::selection {
   background: var(--vl-selection);
 }
+
+/* 面板拖拽调宽手柄 */
+.vl-resize-handle-r,
+.vl-resize-handle-l {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 20;
+}
+
+.vl-resize-handle-r { right: -3px; }
+.vl-resize-handle-l { left: -3px; }
+
+.vl-resize-handle-r:hover,
+.vl-resize-handle-l:hover {
+  background: var(--vl-accent-soft);
+}

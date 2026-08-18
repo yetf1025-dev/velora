@@ -2,17 +2,28 @@ import { SlidersHorizontal, Sparkles } from "lucide-react";
 import { useAppStore } from "../state/appStore";
 import { Inspector } from "../inspector/Inspector";
 import { AiChatPanel } from "../ai/AiChatPanel";
+import { usePanelResize } from "./usePanelResize";
 
-/** 右侧面板:Inspector / AI 对话 双标签 */
+/** 右侧面板:Inspector / AI 对话 双标签;左缘可拖拽调宽 */
 export function RightPanel() {
   const rightTab = useAppStore((s) => s.rightTab);
   const setRightTab = useAppStore((s) => s.setRightTab);
+  const { width, onMouseDown } = usePanelResize("right", 288, 200, 640);
 
   return (
     <div
-      className="flex w-72 shrink-0 flex-col border-l"
-      style={{ borderColor: "var(--vl-border)", background: "var(--vl-panel)" }}
+      className="relative flex shrink-0 flex-col border-l"
+      style={{
+        width,
+        borderColor: "var(--vl-border)",
+        background: "var(--vl-panel)",
+      }}
     >
+      <div
+        className="vl-resize-handle-l"
+        onMouseDown={onMouseDown}
+        title="拖拽调整宽度"
+      />
       <div
         className="flex shrink-0 border-b"
         style={{ borderColor: "var(--vl-border)" }}

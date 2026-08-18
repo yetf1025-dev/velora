@@ -18,6 +18,12 @@ export function AiChatPanel() {
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
+  // e2e 调试:暴露对话 store
+  useEffect(() => {
+    (window as unknown as { __velora?: Record<string, unknown> }).__velora ??= {};
+    (window as unknown as { __velora: Record<string, unknown> }).__velora.aiChat = useAiChatStore;
+  }, []);
+
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages, loading]);

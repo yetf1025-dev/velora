@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { marked } from "marked";
-import { FileText, Loader2, SendHorizonal, Trash2, CornerDownRight, Replace, Copy } from "lucide-react";
+import { FileText, Loader2, SendHorizonal, Trash2, Eye, Replace, Copy } from "lucide-react";
 import { useAiChatStore } from "../ai/aiChatStore";
-import { applyAiContent, getEditor } from "../editor/editorController";
+import { applyAiContent, getEditor, previewAiContent } from "../editor/editorController";
 
 /** AI 对话面板:多轮对话,可选择附带当前文档作为上下文 */
 export function AiChatPanel() {
@@ -163,18 +163,18 @@ function AiBubble({ content }: { content: string }) {
           <button
             type="button"
             className="vl-chat-action-btn"
-            title="插入到光标处"
+            title="在编辑区显示为高亮预览,可就地应用或拒绝"
             onClick={() => {
-              if (applyAiContent(content, "insert")) setApplied("insert");
+              if (previewAiContent(content)) setApplied("insert");
             }}
           >
-            <CornerDownRight size={11} />
-            {applied === "insert" ? "已插入" : "插入光标处"}
+            <Eye size={11} />
+            {applied === "insert" ? "已预览" : "在编辑区预览"}
           </button>
           <button
             type="button"
             className="vl-chat-action-btn"
-            title="替换当前选区"
+            title="直接替换当前选区(不预览)"
             disabled={!hasSelection}
             onClick={() => {
               if (applyAiContent(content, "replace")) setApplied("replace");

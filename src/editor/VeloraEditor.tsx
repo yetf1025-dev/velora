@@ -9,6 +9,7 @@ import { TableKit } from "@tiptap/extension-table";
 import { Mathematics } from "@tiptap/extension-mathematics";
 import "katex/dist/katex.min.css";
 import { Details } from "./extensions/details";
+import { AiPreview } from "./extensions/aiPreview";
 import { FrontmatterNode } from "./extensions/frontmatter/FrontmatterNode";
 import { Toc } from "./extensions/toc";
 import { FormattingKeymap } from "./extensions/FormattingKeymap";
@@ -21,6 +22,7 @@ import { isProgrammaticUpdate, registerEditor, scheduleAutoSave } from "./editor
 import { useAppStore } from "../state/appStore";
 import "./editor.css";
 import "./extensions/details/details.css";
+import "./extensions/aiPreview/aiPreview.css";
 import "./extensions/toc/toc.css";
 import "./extensions/mermaid/mermaid.css";
 import "./extensions/svg/svg.css";
@@ -81,6 +83,7 @@ export function VeloraEditor() {
       TableKit,
       Mermaid,
       Details,
+      AiPreview,
       Toc,
       Svg,
       SvgBlockParser,

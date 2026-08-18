@@ -137,6 +137,26 @@ export function loadMarkdownIntoEditor(markdown: string): void {
   useAppStore.getState().setDirty(true);
 }
 
+/** 把 AI 回复插入为编辑区预览块(带背景色,可就地 应用/拒绝) */
+export function previewAiContent(content: string): boolean {
+  if (!editorInstance) return false;
+  // 先把 markdown 解析为节点,再包进 aiPreview 容器插入光标处
+  const { selection } = editorInstance.state;
+  const { to } = selection;
+  const docJson = editorInstance.markdown?.parse(content);
+  const contentNodes = (docJson?.content ?? []) as import("@tiptap/core").JSONContent[];
+  if (contentNodes.length === 0) return false;
+  editorInstance
+    .chain()
+    .insertContentAt(to, {
+      type: "aiPreview",
+      content: contentNodes,
+    })
+    .run();
+  useAppStore.getState().setDirty(true);
+  return true;
+}
+
 /**
  * 把 AI 回复内容应用到编辑区(ADR-004:经 markdown 解析为 Document 节点)。
  * - insert:插入到当前光标处

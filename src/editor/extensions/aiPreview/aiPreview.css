@@ -1,0 +1,64 @@
+/**
+ * AI 预览块样式:浅强调色背景 + 左侧标记条 + 右上操作按钮。
+ * 让 AI 建议在文档里一眼可辨。
+ */
+
+.vl-ai-preview {
+  position: relative;
+  margin: 0.8em 0;
+  padding: 10px 14px 10px 16px;
+  border-radius: var(--vl-radius-lg);
+  background: var(--vl-accent-soft);
+  border-left: 3px solid var(--vl-accent);
+}
+
+.vl-ai-preview-badge {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--vl-accent-text);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.vl-ai-preview-content {
+  padding-top: 14px; /* 给 badge 留位 */
+}
+
+.vl-ai-preview-actions {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+
+.vl-ai-preview-apply,
+.vl-ai-preview-reject {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border: none;
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.vl-ai-preview-apply {
+  background: var(--vl-accent);
+  color: #fff;
+}
+
+.vl-ai-preview-reject {
+  background: var(--vl-overlay);
+  color: var(--vl-text-muted);
+}
+
+.vl-ai-preview-reject:hover {
+  color: var(--vl-danger);
+}

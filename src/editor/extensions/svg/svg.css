@@ -171,7 +171,7 @@
 .vl-svg-overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 100; /* 最高层:盖住 BubbleMenu/命令面板/对话框 */
   display: flex;
   align-items: center;
   justify-content: center;

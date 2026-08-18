@@ -11,11 +11,12 @@
 export interface AiEdit {
   content: string;
   afterHeading?: string;
+  replaceHeading?: string;
   atEnd: boolean;
 }
 
 const EDIT_RE = /```edit\s*\n([\s\S]*?)```/g;
-const LOCATE_RE = /<!--\s*(after-heading|at-end)\s*:?\s*([^>]*?)-->/;
+const LOCATE_RE = /<!--\s*(after-heading|replace-heading|at-end)\s*:?\s*([^>]*?)-->/;
 
 export function extractEdits(reply: string): AiEdit[] {
   const edits: AiEdit[] = [];
@@ -24,16 +25,18 @@ export function extractEdits(reply: string): AiEdit[] {
   while ((m = EDIT_RE.exec(reply)) !== null) {
     let body = m[1];
     let afterHeading: string | undefined;
+    let replaceHeading: string | undefined;
     let atEnd = false;
     const loc = body.match(LOCATE_RE);
     if (loc) {
       if (loc[1] === "after-heading") afterHeading = loc[2].trim();
+      if (loc[1] === "replace-heading") replaceHeading = loc[2].trim();
       if (loc[1] === "at-end") atEnd = true;
       body = body.replace(LOCATE_RE, "");
     }
     body = body.trim();
     if (body) {
-      edits.push({ content: body, afterHeading, atEnd });
+      edits.push({ content: body, afterHeading, replaceHeading, atEnd });
     }
   }
   return edits;

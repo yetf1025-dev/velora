@@ -9,7 +9,7 @@ import { TableKit } from "@tiptap/extension-table";
 import { Mathematics } from "@tiptap/extension-mathematics";
 import "katex/dist/katex.min.css";
 import { Details } from "./extensions/details";
-import { AiPreview } from "./extensions/aiPreview";
+import { AiPreview, AiDelete } from "./extensions/aiPreview";
 import { FrontmatterNode } from "./extensions/frontmatter/FrontmatterNode";
 import { Toc } from "./extensions/toc";
 import { FormattingKeymap } from "./extensions/FormattingKeymap";
@@ -84,6 +84,7 @@ export function VeloraEditor() {
       Mermaid,
       Details,
       AiPreview,
+      AiDelete,
       Toc,
       Svg,
       SvgBlockParser,
@@ -96,7 +97,12 @@ export function VeloraEditor() {
     editorProps: {
       attributes: { class: "velora-editor" },
     },
-    onUpdate: () => {
+    onUpdate: ({ editor }) => {
+      // 文档变更后,若 InspectorContext 的 pos 越界则清掉(防止组件用旧 pos 访问新文档)
+      const ctx = useAppStore.getState().inspectorContext;
+      if (ctx && ctx.pos > editor.state.doc.content.size) {
+        useAppStore.getState().setInspectorContext(null);
+      }
       // 程序化 setContent(打开/切换文件)不标脏、不触发自动保存
       if (isProgrammaticUpdate()) return;
       setDirty(true);

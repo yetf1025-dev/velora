@@ -14,14 +14,25 @@ export function NodeSourceCard({ pos }: { pos: number }) {
   useEffect(() => {
     if (!editor) return;
     const compute = () => {
+      // 文档变更后旧 pos 可能越界(AI 替换等),先查边界
+      const docSize = editor.state.doc.content.size;
+      if (pos < 0 || pos > docSize) {
+        setSource("");
+        return;
+      }
       const node = editor.state.doc.nodeAt(pos);
       if (!node) {
         setSource("");
         return;
       }
       try {
-        // renderNodeToMarkdown 是 MarkdownManager 的公开方法
-        const md = editor.markdown?.renderNodeToMarkdown(
+        // editor.markdown 属性不可靠,用 storage.markdown.manager
+        const manager = editor.storage.markdown?.manager;
+        if (!manager) {
+          setSource("");
+          return;
+        }
+        const md = manager.renderNodeToMarkdown(
           node.toJSON(),
           undefined,
           0,

@@ -5,7 +5,7 @@ import { create } from "zustand";
 import type { ChatMessage } from "../ai/aiService";
 import { chatStream } from "../ai/aiService";
 import { extractEdits } from "../ai/aiEditParser";
-import { getEditor, previewAiContent } from "../editor/editorController";
+import { getEditor, previewAiContent, previewReplaceHeading } from "../editor/editorController";
 
 interface AiChatState {
   messages: ChatMessage[];
@@ -105,10 +105,14 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       // 自动就地预览:解析回复里的 ```edit 块,定位后插入预览
       const edits = extractEdits(reply);
       for (const edit of edits) {
-        previewAiContent(edit.content, {
-          afterHeading: edit.afterHeading,
-          atEnd: edit.atEnd,
-        });
+        if (edit.replaceHeading) {
+          previewReplaceHeading(edit.content, edit.replaceHeading);
+        } else {
+          previewAiContent(edit.content, {
+            afterHeading: edit.afterHeading,
+            atEnd: edit.atEnd,
+          });
+        }
       }
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });

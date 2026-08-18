@@ -62,3 +62,29 @@
 .vl-ai-preview-reject:hover {
   color: var(--vl-danger);
 }
+
+/* 替换预览:将被删除的旧内容 */
+.vl-ai-delete {
+  position: relative;
+  margin: 0.5em 0;
+  padding: 6px 10px 6px 12px;
+  border-radius: var(--vl-radius);
+  background: rgba(220, 38, 38, 0.06);
+  border-left: 3px solid var(--vl-danger);
+  opacity: 0.75;
+}
+
+.vl-ai-delete-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--vl-danger);
+  margin-bottom: 2px;
+  pointer-events: none;
+}
+
+.vl-ai-delete-content {
+  text-decoration: line-through;
+  text-decoration-color: var(--vl-danger);
+  text-decoration-thickness: 1px;
+}

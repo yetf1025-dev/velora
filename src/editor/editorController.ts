@@ -3,6 +3,7 @@
  * Editor 实例由 VeloraEditor 挂载时注册。
  */
 import type { Editor } from "@tiptap/react";
+import { Fragment } from "@tiptap/pm/model";
 import { ask } from "@tauri-apps/plugin-dialog";
 import {
   openMarkdownFile,
@@ -40,7 +41,11 @@ export function getEditor(): Editor | null {
 
 // e2e / 调试钩子
 if (typeof window !== "undefined") {
-  (window as unknown as { __velora: unknown }).__velora = { getEditor };
+  (window as unknown as { __velora: Record<string, unknown> }).__velora = {
+    getEditor,
+    previewAiContent,
+    previewReplaceHeading,
+  };
 }
 // ── Source Mode 同步 ──────────────────────────────────────
 let sourceDraft = "";
@@ -174,7 +179,75 @@ export function previewAiContent(
   return true;
 }
 
-/** 找到标题所在块的结束位置(该标题子树末尾 = 下一个同级/更高级标题前) */
+/** 找到标题所在块的范围 {from, to}(从标题到下一个同级/更高级标题前) */
+function findHeadingRange(headingText: string): { from: number; to: number } | null {
+  if (!editorInstance) return null;
+  const doc = editorInstance.state.doc;
+  let headingPos: number | null = null;
+  let headingLevel = 0;
+  doc.descendants((node, pos) => {
+    if (headingPos !== null) return false;
+    if (node.type.name === "heading" && node.textContent.includes(headingText)) {
+      headingPos = pos;
+      headingLevel = node.attrs.level as number;
+    }
+  });
+  if (headingPos === null) return null;
+  let end = doc.content.size;
+  doc.descendants((node, pos) => {
+    if (pos <= (headingPos as number)) return;
+    if (node.type.name === "heading" && (node.attrs.level as number) <= headingLevel) {
+      end = pos;
+      return false;
+    }
+  });
+  return { from: headingPos, to: end };
+}
+
+/**
+ * 替换章节预览:旧内容包 aiDelete(红标删除),新内容其后,一起包 aiPreview 插回原位。
+ * 应用:删 aiDelete + 解开 aiPreview(新内容转正);拒绝:解开 aiDelete(旧恢复)+ 删 aiPreview。
+ */
+export function previewReplaceHeading(
+  content: string,
+  headingText: string,
+): boolean {
+  if (!editorInstance) return false;
+  const manager = editorInstance.storage.markdown?.manager;
+  if (!manager) return false;
+  const range = findHeadingRange(headingText);
+  if (!range) return false;
+
+  const docJson = manager.parse(content) as { content?: import("@tiptap/core").JSONContent[] };
+  const newNodes = docJson?.content ?? [];
+  if (newNodes.length === 0) return false;
+
+  const doc = editorInstance.state.doc;
+  const oldContent = doc.slice(range.from, range.to).content.toJSON() as import("@tiptap/core").JSONContent[];
+
+  editorInstance
+    .chain()
+    .command(({ tr, state }) => {
+      const previewType = state.schema.nodes.aiPreview;
+      const deleteType = state.schema.nodes.aiDelete;
+      if (!previewType || !deleteType) return false;
+      // 内容构造用 Fragment.fromJSON(doc 是顶层节点,不能 nodeFromJSON)
+      const delNode = deleteType.create(null, Fragment.fromJSON(state.schema, oldContent));
+      const newFragment = Fragment.fromJSON(state.schema, newNodes);
+      const previewNode = previewType.create(
+        null,
+        Fragment.from(delNode).append(newFragment),
+      );
+      tr.replaceWith(range.from, range.to, previewNode);
+      return true;
+    })
+    .run();
+  setTimeout(() => {
+    document.querySelector(".vl-ai-preview")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 100);
+  useAppStore.getState().setDirty(true);
+  return true;
+}
 function findHeadingEnd(headingText: string): number | null {
   if (!editorInstance) return null;
   const doc = editorInstance.state.doc;

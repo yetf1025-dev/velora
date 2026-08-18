@@ -19,6 +19,12 @@ export function LogPanel({
     setLoading(true);
     try {
       setContent(await readLog(300));
+    } catch (e) {
+      // 命令失败(如 Rust 侧未重编译)也要可见,不能空白
+      setContent(
+        `读取日志失败: ${e instanceof Error ? e.message : String(e)}\n\n` +
+          `若提示命令不存在,请重启 pnpm tauri dev(Rust 命令需重编译生效)。`,
+      );
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Check, Copy, Loader2, Replace, CornerDownRight, X, Wand2 } from "lucide-react";
+import {
+  Bold, Code, Copy, Eraser, Italic, Strikethrough,
+  Check, Loader2, Replace, CornerDownRight, X, Wand2,
+} from "lucide-react";
 import {
   aiOnText,
   complete,
@@ -111,32 +114,56 @@ export function SelectionAIToolbar({ editor }: { editor: Editor }) {
 
         {loading === null && result === null && !error && !customMode && (
           <>
-            {(Object.keys(TEXT_ACTION_LABELS) as TextAiAction[]).map(
-              (action) => (
-                <button
-                  key={action}
-                  type="button"
-                  className="vl-ai-btn"
-                  disabled={loading !== null}
-                  onClick={() => void run(action)}
-                >
-                  {loading === action ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : (
-                    TEXT_ACTION_LABELS[action]
-                  )}
-                </button>
-              ),
-            )}
-            <button
-              type="button"
-              className="vl-ai-btn"
-              disabled={loading !== null}
-              title="自定义指令"
-              onClick={() => setCustomMode(true)}
-            >
-              <Wand2 size={12} />
-            </button>
+            {/* 格式操作行(即时生效,不走 AI) */}
+            <div className="vl-ai-format-row">
+              <button type="button" className="vl-ai-icon-btn" data-active={editor.isActive("bold") || undefined} onClick={() => editor.chain().focus().toggleBold().run()} title="加粗 (⌘B)">
+                <Bold size={13} />
+              </button>
+              <button type="button" className="vl-ai-icon-btn" data-active={editor.isActive("italic") || undefined} onClick={() => editor.chain().focus().toggleItalic().run()} title="斜体 (⌘I)">
+                <Italic size={13} />
+              </button>
+              <button type="button" className="vl-ai-icon-btn" data-active={editor.isActive("strike") || undefined} onClick={() => editor.chain().focus().toggleStrike().run()} title="删除线 (⇧⌘S)">
+                <Strikethrough size={13} />
+              </button>
+              <button type="button" className="vl-ai-icon-btn" data-active={editor.isActive("code") || undefined} onClick={() => editor.chain().focus().toggleCode().run()} title="行内代码 (⌘E)">
+                <Code size={13} />
+              </button>
+              <button type="button" className="vl-ai-icon-btn" onClick={() => editor.chain().focus().unsetAllMarks().run()} title="清除格式">
+                <Eraser size={13} />
+              </button>
+              <button type="button" className="vl-ai-icon-btn" onClick={() => void navigator.clipboard.writeText(editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, "\n"))} title="复制 (⌘C)">
+                <Copy size={13} />
+              </button>
+            </div>
+            {/* AI 操作行 */}
+            <div className="vl-ai-actions-row">
+              {(Object.keys(TEXT_ACTION_LABELS) as TextAiAction[]).map(
+                (action) => (
+                  <button
+                    key={action}
+                    type="button"
+                    className="vl-ai-btn"
+                    disabled={loading !== null}
+                    onClick={() => void run(action)}
+                  >
+                    {loading === action ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      TEXT_ACTION_LABELS[action]
+                    )}
+                  </button>
+                ),
+              )}
+              <button
+                type="button"
+                className="vl-ai-btn"
+                disabled={loading !== null}
+                title="自定义指令"
+                onClick={() => setCustomMode(true)}
+              >
+                <Wand2 size={12} />
+              </button>
+            </div>
           </>
         )}
 

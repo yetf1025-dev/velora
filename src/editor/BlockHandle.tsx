@@ -219,8 +219,15 @@ export function BlockHandle({
               className="vl-context-item"
               onSelect={deleteBlock}
             >
-              <span style={{ color: "var(--vl-danger)" }}>
-                <Trash2 size={12} style={{ marginRight: 6, verticalAlign: -2 }} />
+              <span
+                style={{
+                  color: "var(--vl-danger)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Trash2 size={12} />
                 删除本块
               </span>
             </DropdownMenu.Item>

@@ -4,7 +4,8 @@
 import { create } from "zustand";
 import type { ChatMessage } from "../ai/aiService";
 import { chatStream } from "../ai/aiService";
-import { getEditor } from "../editor/editorController";
+import { extractEdits } from "../ai/aiEditParser";
+import { getEditor, previewAiContent } from "../editor/editorController";
 
 interface AiChatState {
   messages: ChatMessage[];
@@ -49,7 +50,13 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
 
     let system =
       "你是 Velora 文档编辑器内置的 AI 助手,帮助工程师撰写技术文档。" +
-      "回答使用 Markdown 格式,简洁专业,可以使用代码块、表格和 Mermaid 图。";
+      "回答使用 Markdown 格式,简洁专业,可以使用代码块、表格和 Mermaid 图。\n\n" +
+      "重要协议:当你要修改或补充用户正在编辑的文档时,把要写入的内容放进 ```edit 代码块," +
+      "第一行用注释标明位置:\n" +
+      '- <!-- after-heading: 章节标题文字 -->  插到该章节末尾\n' +
+      "- <!-- replace-heading: 章节标题文字 --> 替换该章节内容\n" +
+      "- <!-- at-end -->  追加到文档末尾\n" +
+      "不在 ```edit 块里的内容是解释说明,不会写入文档。用户可直接在编辑区预览并一键应用/拒绝。";
 
     if (get().withDocument) {
       const doc = getEditor()?.getMarkdown() ?? "";
@@ -94,6 +101,15 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
         }
         return { messages: msgs };
       });
+
+      // 自动就地预览:解析回复里的 ```edit 块,定位后插入预览
+      const edits = extractEdits(reply);
+      for (const edit of edits) {
+        previewAiContent(edit.content, {
+          afterHeading: edit.afterHeading,
+          atEnd: edit.atEnd,
+        });
+      }
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     } finally {

@@ -137,25 +137,69 @@ export function loadMarkdownIntoEditor(markdown: string): void {
 }
 
 /** 把 AI 回复插入为编辑区预览块(带背景色,可就地 应用/拒绝) */
-export function previewAiContent(content: string): boolean {
+export function previewAiContent(
+  content: string,
+  locate?: { afterHeading?: string; atEnd?: boolean },
+): boolean {
   if (!editorInstance) return false;
   // 解析走 extension storage 的 MarkdownManager(editor.markdown 属性不可靠)
   const manager = editorInstance.storage.markdown?.manager;
   if (!manager) return false;
-  const { selection } = editorInstance.state;
-  const { to } = selection;
+
+  // 定位:目标标题末尾 > 文档末尾(at-end)> 光标处
+  let insertPos = editorInstance.state.selection.to;
+  if (locate?.afterHeading) {
+    const found = findHeadingEnd(locate.afterHeading);
+    if (found !== null) insertPos = found;
+  } else if (locate?.atEnd) {
+    insertPos = editorInstance.state.doc.content.size;
+  }
+
   const docJson = manager.parse(content) as { content?: import("@tiptap/core").JSONContent[] };
   const contentNodes = docJson?.content ?? [];
   if (contentNodes.length === 0) return false;
   editorInstance
     .chain()
-    .insertContentAt(to, {
+    .insertContentAt(insertPos, {
       type: "aiPreview",
       content: contentNodes,
     })
     .run();
+  // 滚到预览块
+  setTimeout(() => {
+    const el = document.querySelector(".vl-ai-preview");
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 100);
   useAppStore.getState().setDirty(true);
   return true;
+}
+
+/** 找到标题所在块的结束位置(该标题子树末尾 = 下一个同级/更高级标题前) */
+function findHeadingEnd(headingText: string): number | null {
+  if (!editorInstance) return null;
+  const doc = editorInstance.state.doc;
+  let foundPos: number | null = null;
+  let foundLevel = 0;
+  doc.descendants((node, pos) => {
+    if (foundPos !== null) return false;
+    if (node.type.name === "heading" && node.textContent.includes(headingText)) {
+      foundPos = pos;
+      foundLevel = node.attrs.level as number;
+    }
+  });
+  if (foundPos === null) return null;
+  // 找下一个同级或更高级标题,插到它前面
+  let end = doc.content.size;
+  let started = false;
+  doc.descendants((node, pos) => {
+    if (pos <= (foundPos as number)) return;
+    if (!started) { started = true; return; }
+    if (node.type.name === "heading" && (node.attrs.level as number) <= foundLevel) {
+      end = pos;
+      return false;
+    }
+  });
+  return end;
 }
 
 /**

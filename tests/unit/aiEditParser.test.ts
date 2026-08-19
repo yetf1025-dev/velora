@@ -54,3 +54,44 @@ describe("AI 输出格式容错", () => {
     expect(r[0].content).toContain("这里是修改说明");
   });
 });
+
+describe("四反引号围栏(嵌套代码块)", () => {
+  it("````edit 外层 + 内容含 ```mermaid 块,完整提取不截断", () => {
+    const reply = [
+      "说明文字",
+      "",
+      "````edit",
+      "<!-- replace-heading: Mermaid -->",
+      "## Mermaid",
+      "",
+      "```mermaid",
+      "graph LR",
+      "    A --> B",
+      "```",
+      "",
+      "正文继续。",
+      "````",
+    ].join("\n");
+    const r = extractEdits(reply);
+    expect(r).toHaveLength(1);
+    expect(r[0].replaceHeading).toBe("Mermaid");
+    // 关键:内容里的 mermaid 块和后续正文都在,没有被 ``` 截断
+    expect(r[0].content).toContain("graph LR");
+    expect(r[0].content).toContain("正文继续。");
+    expect(r[0].content).toContain("```mermaid");
+  });
+
+  it("三反引号老格式仍兼容", () => {
+    const r = extractEdits("```edit\n<!-- at-end -->\n内容\n```");
+    expect(r[0].content).toBe("内容");
+  });
+
+  it("用你上报的真实案例:嵌套 mermaid 导致的截断场景", () => {
+    // AI 用三反引号包含 mermaid 的内容(错误格式),内容会在第一个 ``` 截断——
+    // 这是已知限制;验证至少不崩溃,且截断部分仍可解析出定位
+    const reply = "```edit\n<!-- replace-heading: 章节 -->\n## 章节\n\n```mermaid\ngraph LR\n  A-->B\n```\n\n后续文字\n```";
+    const r = extractEdits(reply);
+    expect(r.length).toBeGreaterThanOrEqual(1);
+    expect(r[0].replaceHeading).toBe("章节");
+  });
+});

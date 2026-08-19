@@ -24,8 +24,14 @@ export function TitleBar() {
         style={{ color: "var(--vl-text-muted)", userSelect: "none" }}
         title={currentFilePath ?? undefined}
       >
-        {fileName ?? "Velora"}
-        {dirty ? " •" : ""}
+        {fileName ? (
+          <>
+            {fileName}
+            {dirty ? " •" : ""}
+          </>
+        ) : (
+          "Velora"
+        )}
       </span>
     </div>
   );

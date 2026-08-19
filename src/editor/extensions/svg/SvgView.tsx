@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
-import { AlertTriangle, Code, X, ZoomIn } from "lucide-react";
+import { AlertTriangle, Code, ZoomIn } from "lucide-react";
 import { readTextFile, writeTextFile } from "../../../platform/fileService";
 import { useAppStore } from "../../../state/appStore";
 import { useSvgRefreshStore } from "./svgRefresh";
@@ -28,8 +28,6 @@ export function SvgView({
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
-  const [zoomOpen, setZoomOpen] = useState(false);
-  const [zoomScale, setZoomScale] = useState(1);
   const editingRef = useRef<HTMLDivElement | null>(null);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -97,30 +95,6 @@ export function SvgView({
     };
   }, [editing, commit]);
 
-  // 放大 overlay:同步全局状态(压暗两侧面板)+ Esc 关闭 + 打开时重置缩放
-  useEffect(() => {
-    useAppStore.getState().setSvgZoomOpen(zoomOpen);
-    if (!zoomOpen) return;
-    setZoomScale(1);
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setZoomOpen(false);
-    };
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      setZoomScale((s) => {
-        const next = e.deltaY < 0 ? s * 1.15 : s / 1.15;
-        return Math.min(8, Math.max(0.2, next));
-      });
-    };
-    window.addEventListener("keydown", onKey);
-    // 捕获阶段 + passive=false 才能 preventDefault 滚轮
-    window.addEventListener("wheel", onWheel, { passive: false });
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("wheel", onWheel);
-    };
-  }, [zoomOpen]);
-
   const startEdit = useCallback(() => {
     setDraft(svg ?? "");
     setEditing(true);
@@ -184,7 +158,7 @@ export function SvgView({
               if (clickTimer.current) clearTimeout(clickTimer.current);
               clickTimer.current = setTimeout(() => {
                 clickTimer.current = null;
-                setZoomOpen(true);
+                if (svg) useAppStore.getState().setSvgZoom(svg);
               }, 280);
             }
           }}
@@ -200,7 +174,7 @@ export function SvgView({
             type="button"
             className="vl-svg-zoom"
             title="放大查看"
-            onClick={() => setZoomOpen(true)}
+            onClick={() => svg && useAppStore.getState().setSvgZoom(svg)}
           >
             <ZoomIn size={12} />
           </button>
@@ -215,27 +189,6 @@ export function SvgView({
         </>
       )}
 
-      {zoomOpen && svg && (
-        <div className="vl-svg-overlay" onClick={() => setZoomOpen(false)}>
-          <button
-            type="button"
-            className="vl-svg-overlay-close"
-            title="关闭 (Esc)"
-            onClick={(e) => {
-              e.stopPropagation();
-              setZoomOpen(false);
-            }}
-          >
-            <X size={16} />
-          </button>
-          <div
-            className="vl-svg-overlay-content"
-            style={{ transform: `scale(${zoomScale})` }}
-            onClick={(e) => e.stopPropagation()}
-            dangerouslySetInnerHTML={{ __html: svg }}
-          />
-        </div>
-      )}
     </NodeViewWrapper>
   );
 }

@@ -11,6 +11,7 @@ import { AiDiffDialog } from "./inspector/AiDiffDialog";
 import { RecoveryDialog } from "./components/RecoveryDialog";
 import { SearchPanel } from "./components/SearchPanel";
 import { LogPanel } from "./components/LogPanel";
+import { SvgZoomOverlay } from "./components/SvgZoomOverlay";
 import { installGlobalErrorCapture } from "./platform/logService";
 import { loadRecoveryDraft, clearRecoveryDraft } from "./platform/recoveryService";
 import { RightPanel } from "./components/RightPanel";
@@ -36,7 +37,7 @@ export default function App() {
   const [recovery, setRecovery] = useState<string | null>(null);
   const searchOpen = useAppStore((s) => s.searchPanelOpen);
   const logOpen = useAppStore((s) => s.logPanelOpen);
-  const svgZoomOpen = useAppStore((s) => s.svgZoomOpen);
+  const svgZoom = useAppStore((s) => s.svgZoom);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -130,7 +131,7 @@ export default function App() {
     <div
       className="flex h-full flex-col"
       style={{ background: "var(--vl-bg)" }}
-      data-svg-zoom={svgZoomOpen || undefined}
+      data-svg-zoom={svgZoom !== null ? "" : undefined}
     >
       <TitleBar />
       <div className="flex min-h-0 flex-1">
@@ -161,6 +162,7 @@ export default function App() {
         onOpenChange={(open) => useAppStore.getState().setPrintDialogOpen(open)}
       />
       <AiDiffDialog />
+      <SvgZoomOverlay />
       <SearchPanel
         open={searchOpen}
         onOpenChange={(o) => useAppStore.getState().setSearchPanelOpen(o)}

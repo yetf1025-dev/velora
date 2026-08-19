@@ -31,8 +31,8 @@ interface AppState {
   /** Git 历史查看的目标文件(相对项目根的路径),null 关闭 */
   gitHistoryPath: string | null;
   logPanelOpen: boolean;
-  /** SVG 放大查看模式打开(压暗两侧面板) */
-  svgZoomOpen: boolean;
+  /** SVG 放大查看模式:非空即打开(携带要展示的 SVG 源码) */
+  svgZoom: string | null;
   /** 开发模式:错误自动写日志,状态栏红点提示 */
   hasNewError: boolean;
   /** 当前文件在磁盘上被外部修改(且本地有未保存修改) */
@@ -60,7 +60,7 @@ interface AppState {
   setSearchPanelOpen: (open: boolean) => void;
   setGitHistoryPath: (path: string | null) => void;
   setLogPanelOpen: (open: boolean) => void;
-  setSvgZoomOpen: (open: boolean) => void;
+  setSvgZoom: (svg: string | null) => void;
   markError: () => void;
   clearError: () => void;
   setRightTab: (tab: "inspector" | "ai") => void;
@@ -85,7 +85,7 @@ export const useAppStore = create<AppState>((set) => ({
   searchPanelOpen: false,
   gitHistoryPath: null,
   logPanelOpen: false,
-  svgZoomOpen: false,
+  svgZoom: null,
   hasNewError: false,
   externalModified: false,
   notice: null,
@@ -109,7 +109,7 @@ export const useAppStore = create<AppState>((set) => ({
   setSearchPanelOpen: (searchPanelOpen) => set({ searchPanelOpen }),
   setGitHistoryPath: (gitHistoryPath) => set({ gitHistoryPath }),
   setLogPanelOpen: (logPanelOpen) => set({ logPanelOpen }),
-  setSvgZoomOpen: (svgZoomOpen) => set({ svgZoomOpen }),
+  setSvgZoom: (svgZoom) => set({ svgZoom }),
   markError: () => set({ hasNewError: true }),
   clearError: () => set({ hasNewError: false }),
   setRightTab: (rightTab) => set({ rightTab }),

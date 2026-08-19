@@ -43,6 +43,62 @@ body {
   background: var(--vl-accent-soft);
 }
 
+/* SVG 放大查看 overlay(应用级,App 顶层渲染) */
+.vl-svg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* 最高层:在两侧面板与所有对话框之上 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  padding: 48px;
+  cursor: zoom-out;
+}
+
+.vl-svg-overlay-content {
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: transform 80ms ease;
+}
+
+.vl-svg-overlay-content svg {
+  min-width: min-content;
+  min-height: min-content;
+  max-width: 100%;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  background: var(--vl-bg);
+  border-radius: var(--vl-radius-lg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.vl-svg-overlay-close {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--vl-transition);
+}
+
+.vl-svg-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 /* SVG 放大查看模式:压暗两侧面板(它们是布局元素,z-index 盖不住) */
 .vl-dimmable-panel {
   transition: filter 120ms ease;

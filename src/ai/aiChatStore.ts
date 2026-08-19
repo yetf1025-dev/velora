@@ -6,6 +6,7 @@ import type { ChatMessage } from "../ai/aiService";
 import { chatStream } from "../ai/aiService";
 import { extractEdits } from "../ai/aiEditParser";
 import { getEditor, previewAiContent, previewReplaceHeading } from "../editor/editorController";
+import { log } from "../platform/logService";
 
 interface AiChatState {
   messages: ChatMessage[];
@@ -47,6 +48,7 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
 
     const history = [...get().messages, { role: "user" as const, content: trimmed }];
     set({ messages: history, loading: true, error: null });
+    void log("info", `[AI 对话] 用户: ${trimmed.slice(0, 500)}`);
 
     let system =
       "你是 Velora 文档编辑器内置的 AI 助手,帮助工程师撰写技术文档。" +
@@ -102,8 +104,15 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
         return { messages: msgs };
       });
 
+      void log("info", `[AI 对话] 回复(${reply.length} 字): ${reply.slice(0, 800)}`);
       // 自动就地预览:解析回复里的 ```edit 块,定位后插入预览
       const edits = extractEdits(reply);
+      void log(
+        "info",
+        edits.length > 0
+          ? `[AI 对话] 解析出 ${edits.length} 个 edit 块: ${edits.map(e => e.replaceHeading ? `replace(${e.replaceHeading})` : e.afterHeading ? `after(${e.afterHeading})` : "at-end/cursor").join(", ")}`
+          : "[AI 对话] 回复中无 edit 块(未触发预览)",
+      );
       for (const edit of edits) {
         if (edit.replaceHeading) {
           previewReplaceHeading(edit.content, edit.replaceHeading);

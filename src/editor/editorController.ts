@@ -147,6 +147,8 @@ export function previewAiContent(
   locate?: { afterHeading?: string; atEnd?: boolean },
 ): boolean {
   if (!editorInstance) return false;
+  // 新建议替换旧预览:先清掉所有未应用的 aiPreview 块
+  clearPendingPreviews();
   // 解析走 extension storage 的 MarkdownManager(editor.markdown 属性不可靠)
   const manager = editorInstance.storage.markdown?.manager;
   if (!manager) return false;
@@ -177,6 +179,24 @@ export function previewAiContent(
   }, 100);
   useAppStore.getState().setDirty(true);
   return true;
+}
+
+/** 清除所有未应用的 AI 预览块(新建议生成前调用,让预览始终是最新的) */
+function clearPendingPreviews(): void {
+  if (!editorInstance) return;
+  const editor = editorInstance;
+  editor.chain().command(({ tr, state }) => {
+    const ranges: { from: number; to: number }[] = [];
+    state.doc.descendants((node, pos) => {
+      if (node.type.name === "aiPreview") {
+        ranges.push({ from: pos, to: pos + node.nodeSize });
+      }
+    });
+    for (const r of ranges.reverse()) {
+      tr.delete(r.from, r.to);
+    }
+    return true;
+  }).run();
 }
 
 /** 找到标题所在块的范围 {from, to}(从标题到下一个同级/更高级标题前) */
@@ -213,6 +233,8 @@ export function previewReplaceHeading(
   headingText: string,
 ): boolean {
   if (!editorInstance) return false;
+  // 先清旧预览,再定位(避免 aiPreview 里的标题干扰 findHeadingRange)
+  clearPendingPreviews();
   const manager = editorInstance.storage.markdown?.manager;
   if (!manager) return false;
   const range = findHeadingRange(headingText);

@@ -38,3 +38,19 @@ describe("AI edit 块解析", () => {
     expect(r[0].content).toContain("- b");
   });
 });
+
+describe("AI 输出格式容错", () => {
+  it("```edit 与注释同行(缺换行)也能解析", () => {
+    const r = extractEdits("```edit<!-- replace-heading: 章节 -->\n内容\n```");
+    expect(r).toHaveLength(1);
+    expect(r[0].replaceHeading).toBe("章节");
+    expect(r[0].content).toBe("内容");
+  });
+
+  it("```edit 后带多余文字也能解析(注释仍有效,同行文字保留在内容里)", () => {
+    const r = extractEdits("```edit 这里是修改说明\n<!-- at-end -->\n内容\n```");
+    expect(r[0].atEnd).toBe(true);
+    expect(r[0].content).toContain("内容");
+    expect(r[0].content).toContain("这里是修改说明");
+  });
+});

@@ -15,7 +15,7 @@ export interface AiEdit {
   atEnd: boolean;
 }
 
-const EDIT_RE = /```edit\s*\n([\s\S]*?)```/g;
+const EDIT_RE = /```edit([^\n]*)\n([\s\S]*?)```/g;
 const LOCATE_RE = /<!--\s*(after-heading|replace-heading|at-end)\s*:?\s*([^>]*?)-->/;
 
 export function extractEdits(reply: string): AiEdit[] {
@@ -23,7 +23,8 @@ export function extractEdits(reply: string): AiEdit[] {
   let m: RegExpExecArray | null;
   EDIT_RE.lastIndex = 0;
   while ((m = EDIT_RE.exec(reply)) !== null) {
-    let body = m[1];
+    // 首行尾巴(```edit 同行的内容,常是挤在同一行的定位注释)+ 主体
+    let body = m[1] + "\n" + m[2];
     let afterHeading: string | undefined;
     let replaceHeading: string | undefined;
     let atEnd = false;

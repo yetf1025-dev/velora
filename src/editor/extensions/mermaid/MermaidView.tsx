@@ -54,16 +54,24 @@ export function MermaidView({
 
   const svgRef = useRef<string | null>(null);
   svgRef.current = svg;
-  // 单击只选中(选中后 PM 高亮节点,Inspector 显示主题面板);
-  // 放大/编辑走悬浮角标按钮,不依赖单双击时序判定(dev 严格模式
-  // 组件双挂 + PM 重建 NodeView DOM 会让时序判定不可靠)
+  // 渐进式单击:未选中 → 选中(Inspector 出面板);已选中 → 放大。
+  // 用 selected prop 判定(响应式,不依赖时序状态——PM 重建 DOM/严格模式
+  // 双挂都不会影响),角标按钮仍是显式入口
   const onMouseDownDiagram = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     const pos = typeof getPos === "function" ? getPos() : undefined;
-    if (typeof pos === "number") {
-      editor.commands.setNodeSelection(pos);
-      requestAnimationFrame(() => editor.commands.setNodeSelection(pos));
+    if (typeof pos !== "number") return;
+    if (selected) {
+      // 已选中:这次单击直接放大
+      const svgNow = svgRef.current;
+      if (svgNow) {
+        e.preventDefault();
+        useAppStore.getState().setZoomSvg(svgNow);
+        return;
+      }
     }
+    editor.commands.setNodeSelection(pos);
+    requestAnimationFrame(() => editor.commands.setNodeSelection(pos));
   };
 
   const commitDraft = useCallback(() => {
@@ -159,7 +167,7 @@ export function MermaidView({
       ) : (
         <div
           className="vl-mermaid-diagram"
-          title="单击选中 · 角标按钮放大/编辑"
+          title="单击选中,再单击放大 · 角标按钮编辑"
           onMouseDown={onMouseDownDiagram}
           // SVG 来自 mermaid strict 模式渲染,非用户原始 HTML
           dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}

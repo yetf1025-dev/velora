@@ -19,10 +19,26 @@ export function SvgZoomOverlay() {
   const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  /** 适应窗口:按内容与视口比例算缩放(大图可 >100%) */
+  const fitToWindow = useCallback(() => {
+    const el = contentRef.current?.querySelector("svg");
+    if (!el) return;
+    const vb = el.viewBox?.baseVal;
+    const w = vb?.width || el.getBoundingClientRect().width;
+    const h = vb?.height || el.getBoundingClientRect().height;
+    if (!w || !h) return;
+    const fit = Math.min((window.innerWidth * 0.85) / w, (window.innerHeight * 0.8) / h);
+    setScale(Math.min(MAX_SCALE, Math.max(MIN_SCALE, fit)));
+    setOffset({ x: 0, y: 0 });
+  }, []);
+
   useEffect(() => {
     if (svg === null) return;
     setScale(1);
     setOffset({ x: 0, y: 0 });
+    // 打开后下一帧自动适应窗口(内容此时已渲染,viewBox 可读):
+    // 默认 fit 而非固定 100%,小图放大到可读、大图完整可见
+    const raf = requestAnimationFrame(() => fitToWindow());
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setZoomSvg(null);
     };
@@ -46,25 +62,13 @@ export function SvgZoomOverlay() {
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => {
+      cancelAnimationFrame(raf);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [svg, setZoomSvg]);
-
-  /** 适应窗口:按内容与视口比例算初始缩放 */
-  const fitToWindow = useCallback(() => {
-    const el = contentRef.current?.querySelector("svg");
-    if (!el) return;
-    const vb = el.viewBox?.baseVal;
-    const w = vb?.width || el.getBoundingClientRect().width;
-    const h = vb?.height || el.getBoundingClientRect().height;
-    if (!w || !h) return;
-    const fit = Math.min((window.innerWidth * 0.85) / w, (window.innerHeight * 0.8) / h, 1);
-    setScale(Math.max(MIN_SCALE, fit));
-    setOffset({ x: 0, y: 0 });
-  }, []);
+  }, [svg, setZoomSvg, fitToWindow]);
 
   if (svg === null) return null;
 

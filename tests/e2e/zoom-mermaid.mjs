@@ -13,8 +13,21 @@ await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 await page.waitForTimeout(400);
 const selected = await page.evaluate(() => ({
   inspector: document.body.innerText.includes("Mermaid 图表"),
+  nodeSelected: !!document.querySelector(".vl-mermaid[data-selected]"),
 }));
-console.log("单击选中(Inspector):", selected.inspector ? "✓" : "✗");
+console.log("单击选中(Inspector):", selected.inspector && selected.nodeSelected ? "✓" : "✗ " + JSON.stringify(selected));
+
+// 1.5 再单击(已选中)→ 直接放大
+await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+await page.waitForTimeout(500);
+const secondClick = await page.evaluate(() => ({
+  overlay: !!document.querySelector(".vl-svg-overlay"),
+  percent: document.querySelector(".vl-zoom-percent")?.textContent,
+}));
+console.log("已选中再单击放大:", secondClick.overlay ? "✓ 初始 " + secondClick.percent : "✗");
+// 关掉,继续走角标路径
+await page.keyboard.press("Escape");
+await page.waitForTimeout(300);
 
 // 2. 角标放大按钮
 await page.locator(".vl-mermaid-zoom").first().click({ force: true });
@@ -37,11 +50,11 @@ await page.mouse.move(800, 450);
 await page.mouse.down(); await page.mouse.move(900, 500); await page.mouse.up();
 console.log("拖拽平移: ✓(无崩溃)");
 
-// 5. 适应窗口(双击)
+// 5. 适应窗口(双击):滚轮放大后双击应回到 fit 值
 await page.mouse.dblclick(800, 450);
 await page.waitForTimeout(300);
 const fit = await page.evaluate(() => document.querySelector(".vl-zoom-percent")?.textContent);
-console.log("适应窗口:", parseInt(fit) <= 100 ? "✓ " + fit : "✗ " + fit);
+console.log("适应窗口(恢复 fit):", parseInt(fit) < parseInt(zoomed) ? "✓ " + fit : "✗ " + fit);
 
 // 6. Esc
 await page.keyboard.press("Escape");

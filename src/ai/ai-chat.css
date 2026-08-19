@@ -146,3 +146,13 @@
   opacity: 0.4;
   cursor: default;
 }
+
+/* 发送按钮上的快捷键角标 */
+.vl-chat-send-kbd {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 10px;
+  font-family: var(--vl-font-mono);
+  line-height: 1.4;
+}

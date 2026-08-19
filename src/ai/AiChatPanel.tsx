@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { marked } from "marked";
 import { FileText, Loader2, SendHorizonal, Trash2, Eye, Replace, Copy } from "lucide-react";
 import { useAiChatStore } from "../ai/aiChatStore";
+import { useAppStore } from "../state/appStore";
 import { extractEdits } from "../ai/aiEditParser";
 import { applyAiContent, getEditor, previewAiContent, previewReplaceHeading } from "../editor/editorController";
 
@@ -18,6 +19,9 @@ export function AiChatPanel() {
   } = useAiChatStore();
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const showInspector = useAppStore((s) => s.showInspector);
+  const rightTab = useAppStore((s) => s.rightTab);
 
   // e2e 调试:暴露对话 store
   useEffect(() => {
@@ -28,6 +32,13 @@ export function AiChatPanel() {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages, loading]);
+
+  // 面板打开为 AI 标签时自动聚焦输入框(⌘L 快速跳转输入)
+  useEffect(() => {
+    if (showInspector && rightTab === "ai") {
+      inputRef.current?.focus();
+    }
+  }, [showInspector, rightTab]);
 
   const submit = () => {
     if (!input.trim() || loading) return;
@@ -112,8 +123,9 @@ export function AiChatPanel() {
           </div>
         )}
         <textarea
+          ref={inputRef}
           className="vl-chat-input"
-          placeholder="输入消息,⌘Enter 发送"
+          placeholder="输入消息,⌘↵ 发送"
           rows={2}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -134,6 +146,12 @@ export function AiChatPanel() {
         >
           <SendHorizonal size={12} />
           发送
+          <span
+            className="vl-chat-send-kbd"
+            style={{ opacity: input.trim() && !loading ? 0.85 : 0.5 }}
+          >
+            ⌘↵
+          </span>
         </button>
       </div>
     </div>

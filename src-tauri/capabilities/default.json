@@ -19,6 +19,7 @@
           "path": "$LOGDIR/**"
         }
       ]
-    }
+    },
+    "core:webview:allow-set-webview-zoom"
   ]
 }

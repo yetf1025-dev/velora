@@ -8,6 +8,7 @@
 import { Menu, MenuItem, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
 import { getEditor, openFile, openProject, saveFile, exportHtml, switchEditMode } from "../editor/editorController";
 import { useAppStore } from "../state/appStore";
+import { useUiZoomStore } from "../settings/uiZoom";
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -132,6 +133,10 @@ export async function setupNativeMenu(): Promise<void> {
         },
         "CmdOrCtrl+L",
       ),
+      await separator(),
+      await item("界面放大", () => void useUiZoomStore.getState().zoomIn(), "CmdOrCtrl+Plus"),
+      await item("界面缩小", () => void useUiZoomStore.getState().zoomOut(), "CmdOrCtrl+Minus"),
+      await item("重置缩放", () => void useUiZoomStore.getState().resetZoom(), "CmdOrCtrl+0"),
       await separator(),
       await item("切换亮/暗主题", () => store().toggleTheme()),
     ],

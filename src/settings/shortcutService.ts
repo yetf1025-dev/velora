@@ -14,7 +14,10 @@ export type ShortcutAction =
   | "openSettings"
   | "toggleAiChat"
   | "search"
-  | "toggleLog";
+  | "toggleLog"
+  | "zoomIn"
+  | "zoomOut"
+  | "zoomReset";
 
 export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   openFile: "打开文件",
@@ -27,6 +30,9 @@ export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   toggleAiChat: "AI 对话",
   search: "全项目搜索",
   toggleLog: "日志面板(开发模式)",
+  zoomIn: "界面放大(演示)",
+  zoomOut: "界面缩小",
+  zoomReset: "界面缩放重置",
 };
 
 export const DEFAULT_SHORTCUTS: Record<ShortcutAction, string> = {
@@ -40,6 +46,9 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutAction, string> = {
   toggleAiChat: "Cmd+L",
   search: "Cmd+Shift+F",
   toggleLog: "Cmd+D",
+  zoomIn: "Cmd+Plus",
+  zoomOut: "Cmd+Minus",
+  zoomReset: "Cmd+0",
 };
 
 interface ShortcutState {
@@ -74,8 +83,11 @@ export function comboFromEvent(e: KeyboardEvent | React.KeyboardEvent): string |
 
 /** 匹配事件到动作;无匹配返回 null */
 export function matchShortcut(e: KeyboardEvent): ShortcutAction | null {
-  const combo = comboFromEvent(e);
+  let combo = comboFromEvent(e);
   if (!combo || !combo.includes("+")) return null;
+  // 缩放键兼容:物理键 = 在 shift 下是 +,统一归一化
+  if (combo === "Cmd+Shift+=" || combo === "Cmd+=") combo = "Cmd+Plus";
+  if (combo === "Cmd+-" || combo === "Cmd+_") combo = "Cmd+Minus";
   const shortcuts = useShortcutStore.getState().shortcuts;
   for (const [action, combo2] of Object.entries(shortcuts)) {
     if (combo2 === combo) return action as ShortcutAction;

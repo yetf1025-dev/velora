@@ -26,6 +26,7 @@ import { useAppStore } from "./state/appStore";
 import { useGitStore } from "./state/gitStore";
 import { matchShortcut } from "./settings/shortcutService";
 import { setupNativeMenu } from "./platform/nativeMenu";
+import { restoreZoom, useUiZoomStore } from "./settings/uiZoom";
 
 export default function App() {
   const theme = useAppStore((s) => s.theme);
@@ -51,6 +52,11 @@ export default function App() {
   // 全局错误捕获:未处理异常写日志 + 状态栏红点
   useEffect(() => {
     installGlobalErrorCapture();
+  }, []);
+
+  // 恢复上次的界面缩放(演示模式)
+  useEffect(() => {
+    void restoreZoom();
   }, []);
 
   // 启动时检测崩溃恢复草稿
@@ -95,6 +101,15 @@ export default function App() {
           useAppStore.getState().setLogPanelOpen(
             !useAppStore.getState().logPanelOpen,
           );
+          break;
+        case "zoomIn":
+          void useUiZoomStore.getState().zoomIn();
+          break;
+        case "zoomOut":
+          void useUiZoomStore.getState().zoomOut();
+          break;
+        case "zoomReset":
+          void useUiZoomStore.getState().resetZoom();
           break;
         case "search":
           useAppStore.getState().setSearchPanelOpen(

@@ -1,4 +1,5 @@
 import { useAppStore } from "../state/appStore";
+import { useUiZoomStore } from "../settings/uiZoom";
 import { useGitStore } from "../state/gitStore";
 import { reloadCurrentFile, switchEditMode } from "../editor/editorController";
 
@@ -8,6 +9,7 @@ export function StatusBar() {
   const currentFilePath = useAppStore((s) => s.currentFilePath);
   const externalModified = useAppStore((s) => s.externalModified);
   const notice = useAppStore((s) => s.notice);
+  const uiZoom = useUiZoomStore((s) => s.zoom);
   const hasNewError = useAppStore((s) => s.hasNewError);
   const setLogPanelOpen = useAppStore((s) => s.setLogPanelOpen);
   const branch = useGitStore((s) => s.branch);
@@ -35,6 +37,16 @@ export function StatusBar() {
         {editMode === "visual" ? "Visual" : "Markdown"}
       </button>
       <span>UTF-8</span>
+      {uiZoom !== 1 && (
+        <button
+          type="button"
+          title="界面缩放,⌘0 重置"
+          onClick={() => void useUiZoomStore.getState().resetZoom()}
+          style={{ color: "var(--vl-accent-text)" }}
+        >
+          {Math.round(uiZoom * 100)}%
+        </button>
+      )}
       <span className="truncate">
         {currentFilePath ?? "未打开文件"}
         {dirty ? " •" : ""}

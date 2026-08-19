@@ -87,3 +87,34 @@
   cursor: pointer;
   text-align: left;
 }
+
+/* 渲染失败:错误条 + AI 修复按钮 */
+.vl-mermaid-error-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+}
+
+.vl-mermaid-error-wrap .vl-mermaid-error {
+  padding: 0;
+}
+
+.vl-mermaid-aifix {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--vl-accent);
+  border-radius: 999px;
+  background: var(--vl-accent-soft);
+  color: var(--vl-accent-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.vl-mermaid-aifix:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

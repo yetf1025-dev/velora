@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
-import { Pencil, AlertTriangle } from "lucide-react";
+import { Pencil, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
 import { renderDiagram } from "../../../diagram/engine";
 import { scheduleRender } from "../../../diagram/renderScheduler";
 import { resolveThemeId } from "../../../diagram/themes";
+import { aiOnMermaid } from "../../../ai/aiService";
 import { useAppStore } from "../../../state/appStore";
 
 /**
@@ -58,6 +59,30 @@ export function MermaidView({
     }
   }, [draft, source, updateAttributes]);
 
+  // AI 修复:把渲染报错 + 源码发给 AI 修正语法,成功直接更新(⌘Z 可撤销)
+  const [fixing, setFixing] = useState(false);
+  const fixWithAi = useCallback(async () => {
+    setFixing(true);
+    try {
+      const fixed = await aiOnMermaid(
+        source,
+        `此 Mermaid 源码渲染失败,报错如下,请修正语法错误(保持图的语义与内容不变,只修语法):\n${error}`,
+      );
+      // 先本地验证修好了再写入
+      const check = await renderDiagram(fixed, themeId);
+      if (!check.ok) {
+        setError(`AI 修复后仍无法渲染:${check.error}`);
+        return;
+      }
+      setError(null);
+      updateAttributes({ source: fixed });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setFixing(false);
+    }
+  }, [source, error, themeId, updateAttributes]);
+
   return (
     <NodeViewWrapper
       className="vl-mermaid"
@@ -93,18 +118,30 @@ export function MermaidView({
           }}
         />
       ) : error ? (
-        <button
-          type="button"
-          className="vl-mermaid-error"
-          onClick={() => {
-            setDraft(source);
-            setEditing(true);
-          }}
-          title="点击编辑源码"
-        >
-          <AlertTriangle size={14} />
-          <span>Mermaid 渲染失败:{error}</span>
-        </button>
+        <div className="vl-mermaid-error-wrap">
+          <button
+            type="button"
+            className="vl-mermaid-error"
+            onClick={() => {
+              setDraft(source);
+              setEditing(true);
+            }}
+            title="点击编辑源码"
+          >
+            <AlertTriangle size={14} />
+            <span>Mermaid 渲染失败:{error}</span>
+          </button>
+          <button
+            type="button"
+            className="vl-mermaid-aifix"
+            disabled={fixing}
+            onClick={() => void fixWithAi()}
+            title="把报错和源码发给 AI,自动修正语法后重新渲染"
+          >
+            {fixing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+            {fixing ? "修复中…" : "AI 修复"}
+          </button>
+        </div>
       ) : (
         <div
           className="vl-mermaid-diagram"

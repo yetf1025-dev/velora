@@ -26,7 +26,7 @@ import { useAppStore } from "./state/appStore";
 import { useGitStore } from "./state/gitStore";
 import { matchShortcut } from "./settings/shortcutService";
 import { setupNativeMenu } from "./platform/nativeMenu";
-import { restoreZoom, useUiZoomStore } from "./settings/uiZoom";
+import { installWheelZoom, restoreZoom, useUiZoomStore } from "./settings/uiZoom";
 
 export default function App() {
   const theme = useAppStore((s) => s.theme);
@@ -54,9 +54,10 @@ export default function App() {
     installGlobalErrorCapture();
   }, []);
 
-  // 恢复上次的界面缩放(演示模式)
+  // 恢复上次的界面缩放(演示模式)+ ⌘滚轮缩放
   useEffect(() => {
     void restoreZoom();
+    installWheelZoom();
   }, []);
 
   // 启动时检测崩溃恢复草稿

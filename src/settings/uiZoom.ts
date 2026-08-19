@@ -58,3 +58,24 @@ export async function restoreZoom(): Promise<void> {
   const { zoom } = useUiZoomStore.getState();
   if (zoom !== 1) await applyZoom(zoom);
 }
+
+/**
+ * ⌘/Ctrl + 滚轮缩放(浏览器惯例;Tauri 内置 hotkeys 只管键盘 -/=)。
+ * 捕获阶段 + passive:false 拦截默认滚动;平滑步进(滚轮一格 ≈ 3%)。
+ */
+export function installWheelZoom(): void {
+  window.addEventListener(
+    "wheel",
+    (e) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      e.preventDefault();
+      const { zoom } = useUiZoomStore.getState();
+      // 平滑小步:每格 3%(比键盘 10% 更细,符合滚轮手感)
+      const target = Math.min(2, Math.max(0.8, zoom + (e.deltaY < 0 ? 0.03 : -0.03)));
+      const rounded = Math.round(target * 100) / 100;
+      useUiZoomStore.setState({ zoom: rounded });
+      void applyZoom(rounded);
+    },
+    { passive: false, capture: true },
+  );
+}

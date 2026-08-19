@@ -6,6 +6,9 @@
  * 菜单动作用 setNode/toggle 等幂等或半幂等命令,避免与 PM 快捷键双触发。
  */
 import { Menu, MenuItem, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
+import { openFilePath } from "../editor/editorController";
+import { useRecentStore } from "../settings/recentStore";
+import { newEditorWindow } from "../platform/multiWindow";
 import { getEditor, openFile, openProject, saveFile, exportHtml, switchEditMode } from "../editor/editorController";
 import { useAppStore } from "../state/appStore";
 import { useUiZoomStore } from "../settings/uiZoom";
@@ -24,6 +27,20 @@ async function separator() {
   return PredefinedMenuItem.new({ item: "Separator" });
 }
 
+/** 「最近打开」子菜单:最近 8 个文件,文件名 + 完整路径 tooltip */
+async function buildRecentMenu(): Promise<Submenu> {
+  const { recentFiles } = useRecentStore.getState();
+  const items: (MenuItem | PredefinedMenuItem)[] = [];
+  for (const path of recentFiles.slice(0, 8)) {
+    const name = path.split("/").pop() ?? path;
+    items.push(await item(name, () => void openFilePath(path)));
+  }
+  if (items.length === 0) {
+    items.push(await item("(空)", () => {}));
+  }
+  return Submenu.new({ text: "最近打开", items });
+}
+
 export async function setupNativeMenu(): Promise<void> {
   // 浏览器开发模式下没有原生菜单
   if (!("__TAURI_INTERNALS__" in window)) return;
@@ -35,8 +52,10 @@ export async function setupNativeMenu(): Promise<void> {
   const fileMenu = await Submenu.new({
     text: "文件",
     items: [
+      await item("新建窗口", () => void newEditorWindow(), "CmdOrCtrl+Shift+N"),
       await item("打开文件…", () => void openFile(), "CmdOrCtrl+O"),
       await item("打开文件夹…", () => void openProject()),
+      await buildRecentMenu(),
       await separator(),
       await item("保存", () => void saveFile(), "CmdOrCtrl+S"),
       await item("导出 HTML…", () => void exportHtml()),

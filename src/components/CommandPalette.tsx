@@ -11,9 +11,11 @@ import {
   Settings as SettingsIcon,
   GitBranch,
   Sparkles,
+  Clock,
 } from "lucide-react";
 import type { FileNode } from "../state/appStore";
 import { useAppStore } from "../state/appStore";
+import { useRecentStore } from "../settings/recentStore";
 import {
   exportHtml,
   openFile,
@@ -126,19 +128,35 @@ export function CommandPalette({
     return out;
   }, [fileTree, projectRoot]);
 
+  const recentFiles = useRecentStore((s) => s.recentFiles);
+
+  const recents: PaletteItem[] = useMemo(
+    () =>
+      recentFiles.slice(0, 6).map((path) => ({
+        id: `recent:${path}`,
+        label: path.split("/").pop() ?? path,
+        hint: "最近",
+        icon: <Clock size={14} />,
+        run: () => void openFilePath(path),
+      })),
+    [recentFiles],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const match = (item: PaletteItem) =>
       !q ||
       item.label.toLowerCase().includes(q) ||
-      (item.hint ?? "").toLowerCase().includes(q);
-    // 有查询时文件优先(快速跳转场景),否则命令优先
+      (item.hint ?? "").toLowerCase().includes(q) ||
+      (item.id.startsWith("recent:") && item.id.slice(7).toLowerCase().includes(q));
+    // 无查询:命令 + 最近文件;有查询:最近/项目文件 + 命令
+    const matchedRecents = recents.filter(match);
     const matchedFiles = files.filter(match);
     const matchedCommands = commands.filter(match);
     return q
-      ? [...matchedFiles, ...matchedCommands].slice(0, 12)
-      : [...matchedCommands, ...matchedFiles.slice(0, 5)].slice(0, 12);
-  }, [query, files, commands]);
+      ? [...matchedRecents, ...matchedFiles, ...matchedCommands].slice(0, 12)
+      : [...matchedCommands, ...matchedRecents].slice(0, 12);
+  }, [query, files, commands, recents]);
 
   useEffect(() => setActiveIndex(0), [filtered.length]);
 

@@ -7,6 +7,7 @@ import { useAiStore } from "../ai/aiStore";
 import { getProvider, PROVIDERS } from "../ai/providers";
 import { useAppStore } from "../state/appStore";
 import { usePrefsStore } from "../settings/prefsStore";
+import { useRecentStore } from "../settings/recentStore";
 import {
   comboFromEvent,
   SHORTCUT_LABELS,
@@ -79,6 +80,8 @@ function GeneralTab() {
   const setAutoSave = usePrefsStore((s) => s.setAutoSave);
   const autoSaveDelay = usePrefsStore((s) => s.autoSaveDelay);
   const setAutoSaveDelay = usePrefsStore((s) => s.setAutoSaveDelay);
+  const restoreOnLaunch = useRecentStore((s) => s.restoreOnLaunch);
+  const setRestoreOnLaunch = useRecentStore((s) => s.setRestoreOnLaunch);
 
   return (
     <div className="vl-settings-body">
@@ -138,6 +141,18 @@ function GeneralTab() {
           后自动保存
         </label>
       )}
+      <label
+        className="mt-3 flex cursor-pointer items-center gap-2 text-xs"
+        style={{ color: "var(--vl-text)" }}
+      >
+        <input
+          type="checkbox"
+          checked={restoreOnLaunch}
+          onChange={(e) => setRestoreOnLaunch(e.target.checked)}
+          style={{ accentColor: "var(--vl-accent)" }}
+        />
+        启动时打开上次关闭的文档
+      </label>
       <p className="mt-2 text-[11px]" style={{ color: "var(--vl-text-faint)" }}>
         自动保存只对已经保存过的文件生效;新文档请先 ⌘S 选择保存位置。
       </p>

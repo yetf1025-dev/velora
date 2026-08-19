@@ -21,6 +21,7 @@ import { clearRecoveryDraft, saveRecoveryDraft } from "../platform/recoveryServi
 import { logError } from "../platform/logService";
 import { useAppStore } from "../state/appStore";
 import { usePrefsStore } from "../settings/prefsStore";
+import { useRecentStore } from "../settings/recentStore";
 
 let editorInstance: Editor | null = null;
 
@@ -127,6 +128,7 @@ async function loadFileIntoEditor(path: string, content: string): Promise<void> 
   useAppStore.getState().setCurrentFile(path);
   useAppStore.getState().setDirty(false);
   useAppStore.getState().setExternalModified(false);
+  useRecentStore.getState().addRecent(path);
 }
 
 /** 加载 markdown 到编辑器(恢复草稿等场景,不关联文件路径) */

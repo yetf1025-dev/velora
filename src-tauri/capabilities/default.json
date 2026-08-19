@@ -3,7 +3,8 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main",
+    "editor-*"
   ],
   "permissions": [
     "core:default",
@@ -20,6 +21,7 @@
         }
       ]
     },
-    "core:webview:allow-set-webview-zoom"
+    "core:webview:allow-set-webview-zoom",
+    "core:webview:allow-create-webview-window"
   ]
 }

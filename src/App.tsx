@@ -18,6 +18,7 @@ import { RightPanel } from "./components/RightPanel";
 import { VeloraEditor } from "./editor/VeloraEditor";
 import {
   openFile,
+  openFilePath,
   refreshFileTree,
   saveFile,
   switchEditMode,
@@ -27,6 +28,8 @@ import { useGitStore } from "./state/gitStore";
 import { matchShortcut } from "./settings/shortcutService";
 import { setupNativeMenu } from "./platform/nativeMenu";
 import { installWheelZoom, restoreZoom, useUiZoomStore } from "./settings/uiZoom";
+import { useRecentStore } from "./settings/recentStore";
+import { pathFromHash } from "./platform/multiWindow";
 
 export default function App() {
   const theme = useAppStore((s) => s.theme);
@@ -60,10 +63,23 @@ export default function App() {
     installWheelZoom();
   }, []);
 
-  // 启动时检测崩溃恢复草稿
+  // 启动时检测崩溃恢复草稿(优先)→ 其次恢复上次打开的文档
   useEffect(() => {
     void loadRecoveryDraft().then((draft) => {
-      if (draft) setRecovery(draft);
+      if (draft) {
+        setRecovery(draft);
+        return;
+      }
+      // 多窗口传参优先:URL hash 指定了文件就不做"恢复上次"
+      const fromHash = pathFromHash();
+      if (fromHash) {
+        void openFilePath(fromHash);
+        return;
+      }
+      const { lastFile, restoreOnLaunch } = useRecentStore.getState();
+      if (restoreOnLaunch && lastFile) {
+        void openFilePath(lastFile);
+      }
     });
   }, []);
 

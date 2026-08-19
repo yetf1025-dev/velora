@@ -118,3 +118,43 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* 放大按钮(与 svg 的一致) */
+.vl-mermaid-diagram {
+  cursor: zoom-in;
+}
+
+.vl-mermaid-zoom {
+  position: absolute;
+  top: 8px;
+  right: 32px;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border: none;
+  border-radius: var(--vl-radius);
+  background: var(--vl-overlay);
+  color: var(--vl-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--vl-transition);
+}
+
+.vl-mermaid:hover .vl-mermaid-zoom {
+  opacity: 1;
+}
+
+.vl-mermaid-zoom:hover {
+  color: var(--vl-accent);
+}
+
+/* 拖拽条:承担 data-drag-handle,不吞图的点击 */
+.vl-mermaid-drag-strip {
+  height: 6px;
+  cursor: grab;
+  border-radius: var(--vl-radius-lg) var(--vl-radius-lg) 0 0;
+}
+
+.vl-mermaid-drag-strip:hover {
+  background: var(--vl-panel-active);
+}

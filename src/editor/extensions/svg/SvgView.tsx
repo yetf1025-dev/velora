@@ -158,7 +158,7 @@ export function SvgView({
               if (clickTimer.current) clearTimeout(clickTimer.current);
               clickTimer.current = setTimeout(() => {
                 clickTimer.current = null;
-                if (svg) useAppStore.getState().setSvgZoom(svg);
+                if (svg) useAppStore.getState().setZoomSvg(svg);
               }, 280);
             }
           }}
@@ -174,7 +174,7 @@ export function SvgView({
             type="button"
             className="vl-svg-zoom"
             title="放大查看"
-            onClick={() => svg && useAppStore.getState().setSvgZoom(svg)}
+            onClick={() => svg && useAppStore.getState().setZoomSvg(svg)}
           >
             <ZoomIn size={12} />
           </button>

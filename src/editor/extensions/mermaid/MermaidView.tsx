@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
-import { Pencil, AlertTriangle, Sparkles, Loader2 } from "lucide-react";
+import { Pencil, AlertTriangle, Sparkles, Loader2, ZoomIn } from "lucide-react";
 import { renderDiagram } from "../../../diagram/engine";
 import { scheduleRender } from "../../../diagram/renderScheduler";
 import { resolveThemeId } from "../../../diagram/themes";
@@ -52,6 +52,20 @@ export function MermaidView({
     };
   }, [source, themeId, editing]);
 
+  const svgRef = useRef<string | null>(null);
+  svgRef.current = svg;
+  // 单击只选中(选中后 PM 高亮节点,Inspector 显示主题面板);
+  // 放大/编辑走悬浮角标按钮,不依赖单双击时序判定(dev 严格模式
+  // 组件双挂 + PM 重建 NodeView DOM 会让时序判定不可靠)
+  const onMouseDownDiagram = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const pos = typeof getPos === "function" ? getPos() : undefined;
+    if (typeof pos === "number") {
+      editor.commands.setNodeSelection(pos);
+      requestAnimationFrame(() => editor.commands.setNodeSelection(pos));
+    }
+  };
+
   const commitDraft = useCallback(() => {
     setEditing(false);
     if (draft !== source) {
@@ -87,20 +101,20 @@ export function MermaidView({
     <NodeViewWrapper
       className="vl-mermaid"
       data-selected={selected || undefined}
-      data-drag-handle
+      // drag-handle 不放外层(会吞 click → 单击放大失效),由拖拽条承担
       onMouseDownCapture={(e: React.MouseEvent) => {
         if (e.button !== 0) return;
         const pos = typeof getPos === "function" ? getPos() : undefined;
         if (typeof pos !== "number") return;
-        e.preventDefault();
+        // 不 preventDefault:它会吞掉后续 click,单击放大就失效了。
+        // 选中靠捕获段 set + rAF 重断言(冒泡段 PM 可能覆盖)。
         editor.commands.setNodeSelection(pos);
-        // PM 的 mousedown 选区逻辑在冒泡阶段仍会执行并可能覆盖,
-        // 等它结算后再断言一次,确保 NodeSelection 生效
         requestAnimationFrame(() => {
           editor.commands.setNodeSelection(pos);
         });
       }}
     >
+      <div className="vl-mermaid-drag-strip" data-drag-handle />
       {editing ? (
         <textarea
           className="vl-mermaid-source"
@@ -145,23 +159,37 @@ export function MermaidView({
       ) : (
         <div
           className="vl-mermaid-diagram"
+          title="单击选中 · 角标按钮放大/编辑"
+          onMouseDown={onMouseDownDiagram}
           // SVG 来自 mermaid strict 模式渲染,非用户原始 HTML
           dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
         />
       )}
 
-      {!editing && (
-        <button
-          type="button"
-          className="vl-mermaid-edit"
-          title="编辑 Mermaid 源码"
-          onClick={() => {
-            setDraft(source);
-            setEditing(true);
-          }}
-        >
-          <Pencil size={12} />
-        </button>
+      {!editing && !error && (
+        <>
+          <button
+            type="button"
+            className="vl-mermaid-zoom"
+            title="放大查看(滚轮缩放/拖拽平移)"
+            onClick={() => {
+              if (svg) useAppStore.getState().setZoomSvg(svg);
+            }}
+          >
+            <ZoomIn size={12} />
+          </button>
+          <button
+            type="button"
+            className="vl-mermaid-edit"
+            title="编辑 Mermaid 源码"
+            onClick={() => {
+              setDraft(source);
+              setEditing(true);
+            }}
+          >
+            <Pencil size={12} />
+          </button>
+        </>
       )}
     </NodeViewWrapper>
   );

@@ -34,14 +34,14 @@ const afterApply = await page.evaluate(() => ({
 }));
 console.log("应用后:", JSON.stringify(afterApply));
 
-// 再插一个,点拒绝
+// 再插一个,点拒绝(用可靠入口 __velora.previewAiContent)
 await page.evaluate(() => {
-  const ed = window.__velora.getEditor();
-  const docJson = ed.markdown.parse("拒绝内容");
-  ed.chain().insertContentAt(ed.state.doc.content.size, { type: "aiPreview", content: docJson.content }).run();
+  window.__velora.previewAiContent("拒绝内容", { atEnd: true });
 });
-await page.waitForTimeout(200);
-await page.locator(".vl-ai-preview-reject").click();
+await page.waitForTimeout(500);
+// 等 React 渲染出预览块
+await page.waitForSelector(".vl-ai-preview-reject", { timeout: 3000 });
+await page.locator(".vl-ai-preview-reject").first().click();
 await page.waitForTimeout(200);
 const afterReject = await page.evaluate(() => ({
   previewGone: !document.querySelector(".vl-ai-preview"),

@@ -1,34 +1,4 @@
-import { useEffect, useRef } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
-import { NodeSelection } from "@tiptap/pm/state";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "@tiptap/markdown";
-import { Image } from "@tiptap/extension-image";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
-import { TableKit } from "@tiptap/extension-table";
-import { Mathematics } from "@tiptap/extension-mathematics";
-import "katex/dist/katex.min.css";
-import { Details } from "./extensions/details";
-import { AiPreview, AiDelete, AiNew } from "./extensions/aiPreview";
-import { FrontmatterNode } from "./extensions/frontmatter/FrontmatterNode";
-import { Toc } from "./extensions/toc";
-import { FormattingKeymap } from "./extensions/FormattingKeymap";
-import { SourceMarkers } from "./extensions/sourceMarkers";
-import { Mermaid } from "./extensions/mermaid";
-import { Svg, SvgBlockParser } from "./extensions/svg";
-import { BlockHandle } from "./BlockHandle";
-import { SelectionAIToolbar } from "./SelectionAIToolbar";
-import { isProgrammaticUpdate, registerEditor, scheduleAutoSave } from "./editorController";
-import { useAppStore } from "../state/appStore";
-import "./editor.css";
-import "./extensions/details/details.css";
-import "./extensions/aiPreview/aiPreview.css";
-import "./extensions/toc/toc.css";
-import "./extensions/mermaid/mermaid.css";
-import "./extensions/svg/svg.css";
-import "./ai-toolbar.css";
-
-const WELCOME_MARKDOWN = `---
+---
 title: Velora 之旅
 ---
 
@@ -44,9 +14,9 @@ title: Velora 之旅
 
 你现在看到的没有任何 Markdown 符号——但它的真相是一棵文档树(AST),Markdown 只是保存时的文件格式。
 
-试试点进下面这段文字,把光标放在"粗体"两个字中间——你会看到源码标记 \`**\` 原位浮现,移开又消失:
+试试点进下面这段文字,把光标放在"粗体"两个字中间——你会看到源码标记 `**` 原位浮现,移开又消失:
 
-这段有 **粗体**、*斜体*、~~删除线~~ 和 \`行内代码\`,还有一个[链接](https://github.com/yetf1025-dev/velora)。
+这段有 **粗体**、*斜体*、~~删除线~~ 和 `行内代码`,还有一个[链接](https://github.com/yetf1025-dev/velora)。
 
 ### 快捷键速记
 
@@ -73,17 +43,17 @@ Mermaid 图不是"贴在文档里的代码块",而是文档节点。点击下面
 - **右上角铅笔** → 编辑源码,失焦即重渲染
 - **右键** → 转为 SVG(进画布微调)、导出、AI 优化
 
-\`\`\`mermaid
+```mermaid
 graph LR
     A[Markdown] --> B[Document AST]
     B --> C[WYSIWYG]
     B --> D[Export]
     B --> E[AI]
-\`\`\`
+```
 
 时序图也支持(注意时序图建议直接用 Mermaid 编辑,不进画布):
 
-\`\`\`mermaid
+```mermaid
 sequenceDiagram
     participant U as 用户
     participant V as Velora
@@ -92,7 +62,7 @@ sequenceDiagram
     V->>A: 发送上下文
     A-->>V: 返回修改建议
     V-->>U: 就地预览,一键应用
-\`\`\`
+```
 
 ### AI 改图
 
@@ -162,18 +132,18 @@ Mermaid 图如果语法错误(比如 AI 生成了非法箭头),错误条旁有�
 
 折叠块内部是完整的 Markdown 区域——包括 Mermaid 图、SVG、表格、代码块。
 
-\`\`\`ts
+```ts
 // 代码块带语言标记,导出时保留
 interface Velora {
   kernel: "ProseMirror";
   format: "Markdown";
 }
-\`\`\`
+```
 
 数学也行:行内 $E = mc^2$,块级:
 
 $$
-\\int_0^1 x^2 \\, dx = \\frac{1}{3}
+\int_0^1 x^2 \, dx = \frac{1}{3}
 $$
 
 </details>
@@ -185,98 +155,3 @@ $$
 - 项目主页:[yetf1025-dev/velora](https://github.com/yetf1025-dev/velora)
 
 > 现在就试试:选中这段话,按 ⌘L 问 AI"把这段话改得更有感染力"。
-`;
-
-export function VeloraEditor() {
-  const setDirty = useAppStore((s) => s.setDirty);
-  const setInspectorContext = useAppStore((s) => s.setInspectorContext);
-  const columnRef = useRef<HTMLDivElement>(null);
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3, 4, 5, 6] },
-      }),
-      Markdown,
-      FrontmatterNode,
-      Image,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      TableKit,
-      Mermaid,
-      Details,
-      AiPreview,
-      AiDelete,
-      AiNew,
-      Toc,
-      Svg,
-      SvgBlockParser,
-      Mathematics,
-      FormattingKeymap,
-      SourceMarkers,
-    ],
-    content: WELCOME_MARKDOWN,
-    contentType: "markdown",
-    editorProps: {
-      attributes: { class: "velora-editor" },
-    },
-    onUpdate: ({ editor }) => {
-      // 文档变更后,若 InspectorContext 的 pos 越界则清掉(防止组件用旧 pos 访问新文档)
-      const ctx = useAppStore.getState().inspectorContext;
-      if (ctx && ctx.pos > editor.state.doc.content.size) {
-        useAppStore.getState().setInspectorContext(null);
-      }
-      // 程序化 setContent(打开/切换文件)不标脏、不触发自动保存
-      if (isProgrammaticUpdate()) return;
-      setDirty(true);
-      scheduleAutoSave();
-    },
-    onSelectionUpdate: ({ editor }) => {
-      const { selection } = editor.state;
-      // 选中块级节点 → 该节点;文本光标 → 光标所在的顶层块
-      // Inspector 的源码面板对两者都生效(点击某行即可看到该行的 Markdown 源码)
-      if (selection instanceof NodeSelection && selection.node.isBlock) {
-        setInspectorContext({
-          kind: selection.node.type.name,
-          pos: selection.from,
-        });
-      } else {
-        // 文本光标:取光标所在的最内层 textblock(列表项内则显示该行的源码)
-        const $from = selection.$from;
-        if ($from.depth >= 1) {
-          try {
-            const pos = $from.before($from.depth);
-            setInspectorContext({ kind: $from.parent.type.name, pos });
-          } catch {
-            setInspectorContext(null);
-          }
-        } else {
-          setInspectorContext(null);
-        }
-      }
-    },
-  });
-
-  useEffect(() => {
-    registerEditor(editor);
-    return () => registerEditor(null);
-  }, [editor]);
-
-  return (
-    <div className="h-full overflow-y-auto">
-      <div
-        ref={columnRef}
-        className="relative mx-auto w-full py-12"
-        style={{
-          maxWidth: "calc(var(--vl-editor-width) + var(--vl-editor-padding) * 2)",
-          paddingLeft: "var(--vl-editor-padding)",
-          paddingRight: "var(--vl-editor-padding)",
-        }}
-      >
-        <EditorContent editor={editor} />
-        {editor && <SelectionAIToolbar editor={editor} />}
-        {editor && <BlockHandle editor={editor} containerRef={columnRef} />}
-      </div>
-    </div>
-  );
-}

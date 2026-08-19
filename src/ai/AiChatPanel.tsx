@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { marked } from "marked";
 import { FileText, Loader2, SendHorizonal, Trash2, Eye, Replace, Copy } from "lucide-react";
 import { useAiChatStore } from "../ai/aiChatStore";
-import { applyAiContent, getEditor, previewAiContent } from "../editor/editorController";
+import { extractEdits } from "../ai/aiEditParser";
+import { applyAiContent, getEditor, previewAiContent, previewReplaceHeading } from "../editor/editorController";
 
 /** AI 对话面板:多轮对话,可选择附带当前文档作为上下文 */
 export function AiChatPanel() {
@@ -158,6 +159,30 @@ function AiBubble({ content }: { content: string }) {
     ? editor.state.selection.to > editor.state.selection.from
     : false;
 
+  // 预览前先解析 edit 块:只把 edit 块内容放进编辑区,不粘贴整个回复
+  const previewFromReply = () => {
+    const edits = extractEdits(content);
+    if (edits.length === 0) {
+      // 无 edit 块:AI 没用协议,提示但不误粘
+      useAiChatStore.setState({
+        error: "AI 未用 edit 协议标记修改内容,请让它用 ```edit 块包裹要写入的内容",
+      });
+      return false;
+    }
+    let ok = false;
+    for (const edit of edits) {
+      if (edit.replaceHeading) {
+        ok = previewReplaceHeading(edit.content, edit.replaceHeading) || ok;
+      } else {
+        ok = previewAiContent(edit.content, {
+          afterHeading: edit.afterHeading,
+          atEnd: edit.atEnd,
+        }) || ok;
+      }
+    }
+    return ok;
+  };
+
   return (
     <div>
       <div
@@ -171,7 +196,7 @@ function AiBubble({ content }: { content: string }) {
             className="vl-chat-action-btn"
             title="在编辑区显示为高亮预览,可就地应用或拒绝"
             onClick={() => {
-              if (previewAiContent(content)) setApplied("insert");
+              if (previewFromReply()) setApplied("insert");
             }}
           >
             <Eye size={11} />

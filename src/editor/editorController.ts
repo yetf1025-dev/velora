@@ -147,24 +147,28 @@ export function previewAiContent(
   locate?: { afterHeading?: string; atEnd?: boolean },
 ): boolean {
   if (!editorInstance) return false;
-  // 新建议替换旧预览:先清掉所有未应用的 aiPreview 块
-  clearPendingPreviews();
-  // 解析走 extension storage 的 MarkdownManager(editor.markdown 属性不可靠)
   const manager = editorInstance.storage.markdown?.manager;
   if (!manager) return false;
 
-  // 定位:目标标题末尾 > 文档末尾(at-end)> 光标处
-  let insertPos = editorInstance.state.selection.to;
-  if (locate?.afterHeading) {
-    const found = findHeadingEnd(locate.afterHeading);
-    if (found !== null) insertPos = found;
-  } else if (locate?.atEnd) {
-    insertPos = editorInstance.state.doc.content.size;
-  }
-
+  // 1. 先解析内容备好(不动文档)
   const docJson = manager.parse(content) as { content?: import("@tiptap/core").JSONContent[] };
   const contentNodes = docJson?.content ?? [];
   if (contentNodes.length === 0) return false;
+
+  // 2. 清旧预览(文档变小,旧位置失效)
+  clearPendingPreviews();
+
+  // 3. 用清后的最新文档定位:selection/atEnd/标题都要重读,否则越界
+  let insertPos: number;
+  if (locate?.afterHeading) {
+    const found = findHeadingEnd(locate.afterHeading);
+    insertPos = found ?? editorInstance.state.selection.to;
+  } else if (locate?.atEnd) {
+    insertPos = editorInstance.state.doc.content.size;
+  } else {
+    insertPos = editorInstance.state.selection.to;
+  }
+
   editorInstance
     .chain()
     .insertContentAt(insertPos, {
@@ -233,17 +237,20 @@ export function previewReplaceHeading(
   headingText: string,
 ): boolean {
   if (!editorInstance) return false;
-  // 先清旧预览,再定位(避免 aiPreview 里的标题干扰 findHeadingRange)
-  clearPendingPreviews();
   const manager = editorInstance.storage.markdown?.manager;
   if (!manager) return false;
-  const range = findHeadingRange(headingText);
-  if (!range) return false;
 
+  // 1. 先解析新内容备好(不动文档)
   const docJson = manager.parse(content) as { content?: import("@tiptap/core").JSONContent[] };
   const newNodes = docJson?.content ?? [];
   if (newNodes.length === 0) return false;
 
+  // 2. 清旧预览(也清掉 aiPreview 里的标题,避免干扰定位;位置需在清后重算)
+  clearPendingPreviews();
+
+  // 3. 清后定位 + 取旧内容(用最新文档)
+  const range = findHeadingRange(headingText);
+  if (!range) return false;
   const doc = editorInstance.state.doc;
   const oldContent = doc.slice(range.from, range.to).content.toJSON() as import("@tiptap/core").JSONContent[];
 

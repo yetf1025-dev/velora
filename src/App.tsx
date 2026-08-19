@@ -36,6 +36,7 @@ export default function App() {
   const [recovery, setRecovery] = useState<string | null>(null);
   const searchOpen = useAppStore((s) => s.searchPanelOpen);
   const logOpen = useAppStore((s) => s.logPanelOpen);
+  const svgZoomOpen = useAppStore((s) => s.svgZoomOpen);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -126,7 +127,11 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-full flex-col" style={{ background: "var(--vl-bg)" }}>
+    <div
+      className="flex h-full flex-col"
+      style={{ background: "var(--vl-bg)" }}
+      data-svg-zoom={svgZoomOpen || undefined}
+    >
       <TitleBar />
       <div className="flex min-h-0 flex-1">
         {showExplorer && <SidePanel />}

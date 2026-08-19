@@ -15,7 +15,7 @@ export function SidePanel() {
 
   return (
     <div
-      className="relative flex shrink-0 flex-col border-r"
+      className="vl-dimmable-panel relative flex shrink-0 flex-col border-r"
       style={{
         width,
         borderColor: "var(--vl-border)",

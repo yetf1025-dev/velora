@@ -97,8 +97,9 @@ export function SvgView({
     };
   }, [editing, commit]);
 
-  // 放大 overlay:Esc 关闭 + 打开时重置缩放
+  // 放大 overlay:同步全局状态(压暗两侧面板)+ Esc 关闭 + 打开时重置缩放
   useEffect(() => {
+    useAppStore.getState().setSvgZoomOpen(zoomOpen);
     if (!zoomOpen) return;
     setZoomScale(1);
     const onKey = (e: KeyboardEvent) => {

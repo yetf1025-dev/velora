@@ -12,7 +12,7 @@ export function RightPanel() {
 
   return (
     <div
-      className="relative flex shrink-0 flex-col border-l"
+      className="vl-dimmable-panel relative flex shrink-0 flex-col border-l"
       style={{
         width,
         borderColor: "var(--vl-border)",

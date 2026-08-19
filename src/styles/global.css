@@ -42,3 +42,13 @@ body {
 .vl-resize-handle-l:hover {
   background: var(--vl-accent-soft);
 }
+
+/* SVG 放大查看模式:压暗两侧面板(它们是布局元素,z-index 盖不住) */
+.vl-dimmable-panel {
+  transition: filter 120ms ease;
+}
+
+[data-svg-zoom] .vl-dimmable-panel {
+  filter: brightness(0.45);
+  pointer-events: none;
+}

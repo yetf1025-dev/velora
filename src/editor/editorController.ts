@@ -233,6 +233,58 @@ function revertPendingPreviews(): void {
   }
 }
 
+/** 导出给 AI 的干净文档 markdown(剥离未应用预览块,基线=原文) */
+export function getCleanMarkdownForAi(): string {
+  if (!editorInstance) return "";
+  const manager = editorInstance.storage.markdown?.manager;
+  if (!manager) return editorInstance.getMarkdown();
+  // 临时 revert 预览 → 序列化 → 撤销 revert(用 undo 保证文档状态完全还原)
+  revertPendingPreviews();
+  const md = editorInstance.getMarkdown();
+  // revert 是一次编辑事务,undo 恢复预览块
+  editorInstance.commands.undo();
+  return md;
+}
+
+/**
+ * 当前未应用预览里的建议内容(AI 多轮对话的上下文)。
+ * 返回每条建议的定位 + 内容摘要。
+ */
+export function getPendingSuggestions(): Array<{
+  locate: string;
+  content: string;
+}> {
+  if (!editorInstance) return [];
+  const out: Array<{ locate: string; content: string }> = [];
+  editorInstance.state.doc.descendants((node) => {
+    if (node.type.name !== "aiPreview") return;
+    // 收集建议内容:跳过 aiDelete(那是原文)
+    const parts: string[] = [];
+    node.descendants((child) => {
+      if (child.type.name === "aiNew") {
+        parts.push(child.textContent);
+      } else if (child.type.name !== "aiDelete" && child.isBlock && child.childCount === 0) {
+        // 无 aiNew 包裹的纯追加预览,内容就是子块
+      }
+    });
+    if (parts.length === 0 && node.content.size > 0) {
+      // 纯追加预览(无 aiDelete/aiNew 标记):整个内容即建议
+      let markerCount = 0;
+      node.descendants((c) => {
+        if (c.type.name === "aiDelete" || c.type.name === "aiNew") markerCount++;
+        return true;
+      });
+      if (markerCount === 0) {
+        node.forEach((child) => parts.push(child.textContent));
+      }
+    }
+    if (parts.length > 0) {
+      out.push({ locate: "未应用的建议", content: parts.join("\n").slice(0, 1500) });
+    }
+  });
+  return out;
+}
+
 /** 找到标题所在块的范围 {from, to}(从标题到下一个同级/更高级标题前) */
 function findHeadingRange(headingText: string): { from: number; to: number } | null {
   if (!editorInstance) return null;

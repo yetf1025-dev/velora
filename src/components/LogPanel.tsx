@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Terminal, Trash2, X, ExternalLink } from "lucide-react";
+import { Terminal, Trash2, X, ExternalLink, Copy } from "lucide-react";
 import { clearLog, readLog } from "../platform/logService";
 import { useAppStore } from "../state/appStore";
 
@@ -14,6 +14,7 @@ export function LogPanel({
 }) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
@@ -58,6 +59,21 @@ export function LogPanel({
               <Terminal size={14} /> 日志(开发模式)
             </Dialog.Title>
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded px-1.5 py-1 text-[11px] hover:bg-[var(--vl-panel-active)]"
+                style={{ color: "var(--vl-text-muted)" }}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(content);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1200);
+                }}
+                title="复制全部日志"
+                disabled={!content}
+              >
+                <Copy size={13} />
+                {copied ? "已复制" : "复制全部"}
+              </button>
               <button
                 type="button"
                 className="rounded p-1 hover:bg-[var(--vl-panel-active)]"
@@ -106,6 +122,8 @@ export function LogPanel({
               fontFamily: "var(--vl-font-mono)",
               whiteSpace: "pre-wrap",
               wordBreak: "break-all",
+              userSelect: "text",
+              WebkitUserSelect: "text",
               margin: 0,
             }}
           >

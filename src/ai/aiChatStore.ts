@@ -5,7 +5,7 @@ import { create } from "zustand";
 import type { ChatMessage } from "../ai/aiService";
 import { chatStream } from "../ai/aiService";
 import { extractEdits } from "../ai/aiEditParser";
-import { getEditor, previewAiContent, previewReplaceHeading } from "../editor/editorController";
+import { getCleanMarkdownForAi, getPendingSuggestions, previewAiContent, previewReplaceHeading } from "../editor/editorController";
 import { log } from "../platform/logService";
 
 interface AiChatState {
@@ -61,13 +61,24 @@ export const useAiChatStore = create<AiChatState>((set, get) => ({
       "不在 ```edit 块里的内容是解释说明,不会写入文档。用户可直接在编辑区预览并一键应用/拒绝。";
 
     if (get().withDocument) {
-      const doc = getEditor()?.getMarkdown() ?? "";
+      // 干净原文:剥离未应用预览块(基线始终是原始文档,不受建议污染)
+      const doc = getCleanMarkdownForAi();
       if (doc.trim()) {
         const truncated =
           doc.length > MAX_DOC_CONTEXT
             ? doc.slice(0, MAX_DOC_CONTEXT) + "\n\n…(文档过长已截断)"
             : doc;
-        system += `\n\n以下是用户当前正在编辑的文档内容:\n<document>\n${truncated}\n</document>`;
+        system += `\n\n以下是用户当前正在编辑的文档原文:\n<document>\n${truncated}\n</document>`;
+      }
+      // 上一轮 AI 建议(未应用):AI 结合它理解用户的修改意见演进
+      const pending = getPendingSuggestions();
+      if (pending.length > 0) {
+        const blocks = pending
+          .map((p, i) => `<pending_suggestion_${i + 1}>\n${p.content}\n</pending_suggestion_${i + 1}>`)
+          .join("\n");
+        system +=
+          `\n\n以下是你上一轮提出的、尚未被用户应用的建议(用户当前看到的预览)。` +
+          `用户的新意见通常针对这份建议,请基于原文 + 这份建议的改进来生成新的 edit 块:\n${blocks}`;
       }
     }
 

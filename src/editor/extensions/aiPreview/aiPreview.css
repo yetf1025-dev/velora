@@ -1,15 +1,15 @@
 /**
- * AI 预览块样式:浅强调色背景 + 左侧标记条 + 右上操作按钮。
- * 让 AI 建议在文档里一眼可辨。
+ * AI 预览块样式 —— GitHub/Cursor diff 风格:
+ * 删除 = 红背景 + 删除线;新增 = 绿背景。
  */
 
 .vl-ai-preview {
   position: relative;
   margin: 0.8em 0;
-  padding: 10px 14px 10px 16px;
+  padding: 6px 0 6px 0;
   border-radius: var(--vl-radius-lg);
-  background: var(--vl-accent-soft);
-  border-left: 3px solid var(--vl-accent);
+  border: 1px solid var(--vl-border);
+  overflow: hidden;
 }
 
 .vl-ai-preview-badge {
@@ -20,17 +20,18 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--vl-accent-text);
-  opacity: 0.8;
+  opacity: 0.85;
   pointer-events: none;
+  z-index: 2;
 }
 
 .vl-ai-preview-content {
-  padding-top: 14px; /* 给 badge 留位 */
+  padding-top: 18px; /* 给 badge 留位 */
 }
 
 .vl-ai-preview-actions {
   position: absolute;
-  top: 6px;
+  top: 4px;
   right: 8px;
   display: flex;
   gap: 4px;
@@ -50,7 +51,7 @@
 }
 
 .vl-ai-preview-apply {
-  background: var(--vl-accent);
+  background: var(--vl-success);
   color: #fff;
 }
 
@@ -63,28 +64,78 @@
   color: var(--vl-danger);
 }
 
-/* 替换预览:将被删除的旧内容 */
+/* ── 新增内容:绿背景(GitHub diff +) ─────────────── */
+.vl-ai-preview > .vl-ai-preview-content > *:not(.vl-ai-delete) {
+  /* 直接子内容加绿底;用 lighter 变体保持文字可读 */
+}
+
+/* 新增块标记:包在每个非删除子块外是理想方案,当前用容器内选择器近似:
+   aiDelete 之外的子块 = 新增内容 */
+.vl-ai-preview [data-type="ai-delete"] ~ *,
+.vl-ai-preview > * {
+  /* 占位:实际着色由下方 aiDelete 与 new-content 规则承担 */
+}
+
+/* ── 删除内容:红背景 + 删除线(GitHub diff -) ────── */
 .vl-ai-delete {
   position: relative;
-  margin: 0.5em 0;
-  padding: 6px 10px 6px 12px;
-  border-radius: var(--vl-radius);
-  background: rgba(220, 38, 38, 0.06);
-  border-left: 3px solid var(--vl-danger);
-  opacity: 0.75;
+  margin: 2px 0;
+  padding: 4px 10px;
+  background: rgba(220, 38, 38, 0.12);
+  border-radius: 4px;
+}
+
+.vl-ai-delete::before {
+  content: "−";
+  position: absolute;
+  left: 2px;
+  top: 4px;
+  color: var(--vl-danger);
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .vl-ai-delete-badge {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.5px;
   color: var(--vl-danger);
   margin-bottom: 2px;
+  padding-left: 14px;
   pointer-events: none;
 }
 
 .vl-ai-delete-content {
   text-decoration: line-through;
-  text-decoration-color: var(--vl-danger);
+  text-decoration-color: rgba(220, 38, 38, 0.6);
   text-decoration-thickness: 1px;
+  color: var(--vl-text-muted);
+  padding-left: 14px;
+}
+
+.vl-ai-delete-content > * {
+  text-decoration: inherit;
+}
+
+/* ── 新增内容:绿背景(GitHub diff +) ─────────────── */
+/* aiPreview 内、aiDelete 之外的内容块 = 新增 */
+.vl-ai-new {
+  margin: 2px 0;
+  padding: 4px 10px 4px 20px;
+  background: rgba(22, 163, 74, 0.12);
+  border-radius: 4px;
+  position: relative;
+}
+
+.vl-ai-new::before {
+  content: "+";
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  color: var(--vl-success);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.vl-ai-new-content {
+  color: var(--vl-text);
 }

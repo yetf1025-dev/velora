@@ -9,7 +9,7 @@ import { TableKit } from "@tiptap/extension-table";
 import { Mathematics } from "@tiptap/extension-mathematics";
 import "katex/dist/katex.min.css";
 import { Details } from "./extensions/details";
-import { AiPreview, AiDelete } from "./extensions/aiPreview";
+import { AiPreview, AiDelete, AiNew } from "./extensions/aiPreview";
 import { FrontmatterNode } from "./extensions/frontmatter/FrontmatterNode";
 import { Toc } from "./extensions/toc";
 import { FormattingKeymap } from "./extensions/FormattingKeymap";
@@ -85,6 +85,7 @@ export function VeloraEditor() {
       Details,
       AiPreview,
       AiDelete,
+      AiNew,
       Toc,
       Svg,
       SvgBlockParser,

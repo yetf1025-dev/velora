@@ -18,17 +18,22 @@ export function AiPreviewView({ editor, getPos }: NodeViewProps) {
       .command(({ tr, state }) => {
         const cur = state.doc.nodeAt(pos);
         if (!cur || cur.type.name !== "aiPreview") return false;
-        // 1. 从后往前删 aiDelete 子块(避免位置偏移),用删除后的 doc 重读位置
-        const delRanges: { from: number; to: number }[] = [];
+        // 从后往前:删 aiDelete(旧内容),解开 aiNew(新内容转正)
+        const ops: { pos: number; kind: "del" | "unwrap" }[] = [];
         cur.forEach((child, offset) => {
-          if (child.type.name === "aiDelete") {
-            delRanges.push({ from: pos + 1 + offset, to: pos + 1 + offset + child.nodeSize });
-          }
+          if (child.type.name === "aiDelete") ops.push({ pos: pos + 1 + offset, kind: "del" });
+          if (child.type.name === "aiNew") ops.push({ pos: pos + 1 + offset, kind: "unwrap" });
         });
-        for (const r of delRanges.reverse()) {
-          tr.delete(r.from, r.to);
+        for (const op of ops.reverse()) {
+          const node = tr.doc.nodeAt(op.pos);
+          if (!node) continue;
+          if (op.kind === "del") {
+            tr.delete(op.pos, op.pos + node.nodeSize);
+          } else {
+            tr.replaceWith(op.pos, op.pos + node.nodeSize, node.content);
+          }
         }
-        // 2. 删除后 aiPreview 起始位置不变(删除都在其内部/之后),直接在当前 doc 重读
+        // 解开 aiPreview 容器
         const cur2 = tr.doc.nodeAt(pos);
         if (cur2 && cur2.type.name === "aiPreview") {
           tr.replaceWith(pos, pos + cur2.nodeSize, cur2.content);
@@ -46,21 +51,25 @@ export function AiPreviewView({ editor, getPos }: NodeViewProps) {
       .command(({ tr, state }) => {
         const cur = state.doc.nodeAt(pos);
         if (!cur || cur.type.name !== "aiPreview") return false;
-        // 1. 解开所有 aiDelete(旧内容恢复为正常块),从后往前
-        const unwraps: number[] = [];
+        // 从后往前:解开 aiDelete(原文恢复),删 aiNew(新内容)
+        const ops: { pos: number; kind: "del" | "unwrap" }[] = [];
         cur.forEach((child, offset) => {
-          if (child.type.name === "aiDelete") unwraps.push(pos + 1 + offset);
+          if (child.type.name === "aiDelete") ops.push({ pos: pos + 1 + offset, kind: "unwrap" });
+          if (child.type.name === "aiNew") ops.push({ pos: pos + 1 + offset, kind: "del" });
         });
-        for (const childPos of unwraps.reverse()) {
-          const node = tr.doc.nodeAt(childPos);
-          if (node && node.type.name === "aiDelete") {
-            tr.replaceWith(childPos, childPos + node.nodeSize, node.content);
+        for (const op of ops.reverse()) {
+          const node = tr.doc.nodeAt(op.pos);
+          if (!node) continue;
+          if (op.kind === "del") {
+            tr.delete(op.pos, op.pos + node.nodeSize);
+          } else {
+            tr.replaceWith(op.pos, op.pos + node.nodeSize, node.content);
           }
         }
-        // 2. 删 aiPreview(连带新内容),aiDelete 已解开为正常内容会被一并保留
+        // 删容器(此时应只剩恢复的原文;若只剩原文则整个容器解开亦可)
         const cur2 = tr.doc.nodeAt(pos);
         if (cur2 && cur2.type.name === "aiPreview") {
-          tr.delete(pos, pos + cur2.nodeSize);
+          tr.replaceWith(pos, pos + cur2.nodeSize, cur2.content);
         }
         return true;
       })

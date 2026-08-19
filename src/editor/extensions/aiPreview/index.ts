@@ -3,6 +3,8 @@ import { AiPreviewNode } from "./AiPreviewNode";
 import { AiPreviewView } from "./AiPreviewView";
 import { AiDeleteNode } from "./AiDeleteNode";
 import { AiDeleteView } from "./AiDeleteView";
+import { AiNewNode } from "./AiNewNode";
+import { AiNewView } from "./AiNewView";
 
 /** AI 预览块(应用/拒绝) */
 export const AiPreview = AiPreviewNode.extend({
@@ -15,5 +17,12 @@ export const AiPreview = AiPreviewNode.extend({
 export const AiDelete = AiDeleteNode.extend({
   addNodeView() {
     return ReactNodeViewRenderer(AiDeleteView);
+  },
+});
+
+/** AI 新增标记块(替换预览的新内容,绿底) */
+export const AiNew = AiNewNode.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(AiNewView);
   },
 });

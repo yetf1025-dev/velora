@@ -156,7 +156,7 @@ export function previewAiContent(
   if (contentNodes.length === 0) return false;
 
   // 2. 清旧预览(文档变小,旧位置失效)
-  clearPendingPreviews();
+  revertPendingPreviews();
 
   // 3. 用清后的最新文档定位:selection/atEnd/标题都要重读,否则越界
   let insertPos: number;
@@ -185,22 +185,52 @@ export function previewAiContent(
   return true;
 }
 
-/** 清除所有未应用的 AI 预览块(新建议生成前调用,让预览始终是最新的) */
-function clearPendingPreviews(): void {
+/**
+ * 恢复所有未应用的 AI 预览(新一轮建议生成前调用)。
+ * 关键:不是删除,而是 revert——
+ * - 含 aiDelete 的预览(替换类):解开 aiDelete 恢复原文,丢弃新内容
+ * - 纯追加预览:直接删(没有原文被动过)
+ * 这样每轮 diff 的基线始终是原始文档,多轮修改不丢内容。
+ * 实现上每个预览独立一个 transaction,避免事务内位置偏移的坑。
+ */
+function revertPendingPreviews(): void {
   if (!editorInstance) return;
-  const editor = editorInstance;
-  editor.chain().command(({ tr, state }) => {
-    const ranges: { from: number; to: number }[] = [];
-    state.doc.descendants((node, pos) => {
-      if (node.type.name === "aiPreview") {
-        ranges.push({ from: pos, to: pos + node.nodeSize });
-      }
+  // 循环直到没有预览(每次处理一个,事务隔离保证位置准确)
+  for (let i = 0; i < 20; i++) {
+    const doc = editorInstance.state.doc;
+    let target: number | null = null;
+    doc.descendants((node, pos) => {
+      if (target === null && node.type.name === "aiPreview") target = pos;
+      return target === null;
     });
-    for (const r of ranges.reverse()) {
-      tr.delete(r.from, r.to);
-    }
-    return true;
-  }).run();
+    if (target === null) break;
+    const previewPos = target as number;
+    editorInstance
+      .chain()
+      .command(({ tr, state }) => {
+        const preview = state.doc.nodeAt(previewPos);
+        if (!preview || preview.type.name !== "aiPreview") return false;
+        // 从后往前:aiDelete 解开(恢复原文),aiNew 删(丢建议),其余保留
+        const ops: { pos: number; kind: "del" | "unwrap" }[] = [];
+        preview.forEach((child, offset) => {
+          if (child.type.name === "aiDelete") ops.push({ pos: previewPos + 1 + offset, kind: "unwrap" });
+          if (child.type.name === "aiNew") ops.push({ pos: previewPos + 1 + offset, kind: "del" });
+        });
+        for (const op of ops.reverse()) {
+          const node = tr.doc.nodeAt(op.pos);
+          if (!node) continue;
+          if (op.kind === "del") tr.delete(op.pos, op.pos + node.nodeSize);
+          else tr.replaceWith(op.pos, op.pos + node.nodeSize, node.content);
+        }
+        // 容器解开(此时只剩恢复的原文或空)
+        const cur = tr.doc.nodeAt(previewPos);
+        if (cur && cur.type.name === "aiPreview") {
+          tr.replaceWith(previewPos, previewPos + cur.nodeSize, cur.content);
+        }
+        return true;
+      })
+      .run();
+  }
 }
 
 /** 找到标题所在块的范围 {from, to}(从标题到下一个同级/更高级标题前) */
@@ -246,7 +276,7 @@ export function previewReplaceHeading(
   if (newNodes.length === 0) return false;
 
   // 2. 清旧预览(也清掉 aiPreview 里的标题,避免干扰定位;位置需在清后重算)
-  clearPendingPreviews();
+  revertPendingPreviews();
 
   // 3. 清后定位 + 取旧内容(用最新文档)
   const range = findHeadingRange(headingText);
@@ -259,13 +289,14 @@ export function previewReplaceHeading(
     .command(({ tr, state }) => {
       const previewType = state.schema.nodes.aiPreview;
       const deleteType = state.schema.nodes.aiDelete;
-      if (!previewType || !deleteType) return false;
-      // 内容构造用 Fragment.fromJSON(doc 是顶层节点,不能 nodeFromJSON)
+      const newType = state.schema.nodes.aiNew;
+      if (!previewType || !deleteType || !newType) return false;
+      // 旧内容包 aiDelete(红),新内容包 aiNew(绿),一起进 aiPreview
       const delNode = deleteType.create(null, Fragment.fromJSON(state.schema, oldContent));
-      const newFragment = Fragment.fromJSON(state.schema, newNodes);
+      const newNode = newType.create(null, Fragment.fromJSON(state.schema, newNodes));
       const previewNode = previewType.create(
         null,
-        Fragment.from(delNode).append(newFragment),
+        Fragment.fromArray([delNode, newNode]),
       );
       tr.replaceWith(range.from, range.to, previewNode);
       return true;

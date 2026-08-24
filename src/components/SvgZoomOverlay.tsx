@@ -6,26 +6,31 @@ const MIN_SCALE = 0.2;
 const MAX_SCALE = 8;
 
 /**
- * 按 viewBox 把 svg 字符串的开标签改写为显式 width/height(px)。
+ * 按 viewBox 把 svg 字符串的 <svg 开标签改写为显式 width/height(px)。
  * - mermaid 输出 width="100%" + viewBox,无固有尺寸:放进收缩容器,
  *   WebKit 能解出大小而 WebView2/Chromium 解成 0×0(放大后空白)。
  * - 必须改字符串而非事后改 DOM:dangerouslySetInnerHTML 每次 render
  *   传入新对象,React 会重灌 innerHTML,事后写入的 style 会被冲掉。
+ * - 落点必须锚定 <svg 开标签本体:文件型 SVG 常带 <?xml?> 声明或前置
+ *   注释,取字符串第一个 ">" 会把属性插进 prolog(修复失效)或插破
+ *   注释闭合(整张图被吞)。
  */
-function sizeSvgHtml(html: string): string {
-  const vb = html.match(/<svg[^>]*\sviewBox="([^"]+)"/)?.[1];
+export function sizeSvgHtml(html: string): string {
+  const openMatch = html.match(/<svg\b[^>]*>/);
+  const openTag = openMatch?.[0];
+  const start = openMatch?.index;
+  if (!openMatch || !openTag || start === undefined) return html;
+  const vb = openTag.match(/\sviewBox="([^"]+)"/)?.[1];
   if (!vb) return html;
   const nums = vb.trim().split(/[\s,]+/).map(Number);
   const w = nums[2];
   const h = nums[3];
   if (!w || !h) return html;
-  const tagEnd = html.indexOf(">");
-  if (tagEnd < 0) return html;
-  const open = html
-    .slice(0, tagEnd)
+  const sized = openTag
     .replace(/\swidth="[^"]*"/, "")
-    .replace(/\sheight="[^"]*"/, "");
-  return `${open} width="${w}px" height="${h}px"${html.slice(tagEnd)}`;
+    .replace(/\sheight="[^"]*"/, "")
+    .replace(/<svg\b/, `<svg width="${w}px" height="${h}px"`);
+  return html.slice(0, start) + sized + html.slice(start + openTag.length);
 }
 
 /**

@@ -1,9 +1,32 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Maximize, Minus, Plus, X } from "lucide-react";
 import { useAppStore } from "../state/appStore";
 
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 8;
+
+/**
+ * 按 viewBox 把 svg 字符串的开标签改写为显式 width/height(px)。
+ * - mermaid 输出 width="100%" + viewBox,无固有尺寸:放进收缩容器,
+ *   WebKit 能解出大小而 WebView2/Chromium 解成 0×0(放大后空白)。
+ * - 必须改字符串而非事后改 DOM:dangerouslySetInnerHTML 每次 render
+ *   传入新对象,React 会重灌 innerHTML,事后写入的 style 会被冲掉。
+ */
+function sizeSvgHtml(html: string): string {
+  const vb = html.match(/<svg[^>]*\sviewBox="([^"]+)"/)?.[1];
+  if (!vb) return html;
+  const nums = vb.trim().split(/[\s,]+/).map(Number);
+  const w = nums[2];
+  const h = nums[3];
+  if (!w || !h) return html;
+  const tagEnd = html.indexOf(">");
+  if (tagEnd < 0) return html;
+  const open = html
+    .slice(0, tagEnd)
+    .replace(/\swidth="[^"]*"/, "")
+    .replace(/\sheight="[^"]*"/, "");
+  return `${open} width="${w}px" height="${h}px"${html.slice(tagEnd)}`;
+}
 
 /**
  * 图表放大查看器(应用级,SVG 与 Mermaid 共用)。
@@ -70,6 +93,9 @@ export function SvgZoomOverlay() {
     };
   }, [svg, setZoomSvg, fitToWindow]);
 
+  // 注入前落定显式尺寸(见 sizeSvgHtml 注释):Chromium 下无固有尺寸 svg 为 0×0
+  const sizedSvg = useMemo(() => (svg === null ? null : sizeSvgHtml(svg)), [svg]);
+
   if (svg === null) return null;
 
   return (
@@ -124,7 +150,7 @@ export function SvgZoomOverlay() {
           e.preventDefault();
           dragRef.current = { startX: e.clientX, startY: e.clientY, baseX: offset.x, baseY: offset.y };
         }}
-        dangerouslySetInnerHTML={{ __html: svg }}
+        dangerouslySetInnerHTML={sizedSvg ? { __html: sizedSvg } : undefined}
       />
 
       <div className="vl-zoom-hint">滚轮缩放 · 拖拽平移 · 双击适应窗口 · Esc 关闭</div>

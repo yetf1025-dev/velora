@@ -160,3 +160,27 @@ body {
   color: rgba(255, 255, 255, 0.55);
   pointer-events: none;
 }
+
+/* 拖拽文档到窗口的悬停提示(App 顶层渲染,pointer-events 穿透) */
+.vl-drop-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 110; /* 在放大查看 overlay(100)之上 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: var(--vl-accent-soft);
+  border: 2px dashed var(--vl-accent);
+  box-sizing: border-box;
+}
+
+.vl-drop-hint-card {
+  background: var(--vl-bg);
+  border: 1px solid var(--vl-border);
+  border-radius: var(--vl-radius-lg);
+  padding: 14px 28px;
+  font-size: 15px;
+  color: var(--vl-accent-text);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}

@@ -30,6 +30,7 @@ import { setupNativeMenu } from "./platform/nativeMenu";
 import { installWheelZoom, restoreZoom, useUiZoomStore } from "./settings/uiZoom";
 import { useRecentStore } from "./settings/recentStore";
 import { pathFromHash } from "./platform/multiWindow";
+import { onFileDrop, pickDroppedMarkdown } from "./platform/dragDrop";
 
 export default function App() {
   const theme = useAppStore((s) => s.theme);
@@ -159,6 +160,25 @@ export default function App() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
+  // 拖拽 .md 到窗口直接打开(浏览器 dev 模式无此能力,静默降级)
+  const [dropHover, setDropHover] = useState(false);
+  useEffect(() => {
+    return onFileDrop(
+      (paths) => {
+        const { file, total } = pickDroppedMarkdown(paths);
+        if (file) {
+          void openFilePath(file);
+          return;
+        }
+        if (total > 0) {
+          // 全是图片等非文档文件:明说而不是无声无息
+          useAppStore.getState().setNotice("拖入的文件不是 Markdown 文档,仅支持打开 .md / .markdown");
+        }
+      },
+      setDropHover,
+    );
+  }, []);
+
   return (
     <div
       className="flex h-full flex-col"
@@ -195,6 +215,11 @@ export default function App() {
       />
       <AiDiffDialog />
       <SvgZoomOverlay />
+      {dropHover && (
+        <div className="vl-drop-hint">
+          <div className="vl-drop-hint-card">松开以打开文档</div>
+        </div>
+      )}
       <SearchPanel
         open={searchOpen}
         onOpenChange={(o) => useAppStore.getState().setSearchPanelOpen(o)}

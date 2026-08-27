@@ -1,0 +1,20 @@
+/**
+ * htmlBlock:Markdown 原生 HTML 块的 fallback 渲染。
+ * shadow DOM 内是浏览器默认样式,与编辑器排版主题天然隔离。
+ */
+.vl-htmlblock {
+  margin: 0.8em 0;
+  border-radius: var(--vl-radius);
+  /* 调试用轮廓注释掉;整体行为类似「内嵌小网页」 */
+}
+
+.vl-htmlblock-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vl-warning);
+  font-size: 13px;
+  padding: 8px 12px;
+  background: var(--vl-code-bg);
+  border-radius: var(--vl-radius);
+}

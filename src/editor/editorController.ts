@@ -78,7 +78,7 @@ export async function openFile(): Promise<void> {
   await loadFileIntoEditor(file.path, file.content);
 }
 
-/** 打开指定路径的文件(Project Explorer 点击);带未保存守卫 */
+/** 打开指定路径的文件(Project Explorer 点击 / 拖拽 / 单开);带未保存守卫 */
 export async function openFilePath(path: string): Promise<void> {
   if (!isMarkdownPath(path)) return;
   const store = useAppStore.getState();
@@ -96,6 +96,7 @@ export async function openFilePath(path: string): Promise<void> {
   try {
     const content = await readTextFile(path);
     await loadFileIntoEditor(path, content);
+    void ensureProjectCoversFile(path);
     store2.setNotice(null);
   } catch (e) {
     const msg = `打开文件失败:${String(e)}`;
@@ -103,6 +104,31 @@ export async function openFilePath(path: string): Promise<void> {
     store2.setNotice(msg);
     store2.markError();
     void logError(e, `打开文件 ${path}`);
+  }
+}
+
+/**
+ * 拖拽/单开的文件不在当前项目内时,自动把其所在目录设为项目根,
+ * 让左侧资源树直接展示该文件夹(用户不用再手动「打开文件夹」)。
+ */
+async function ensureProjectCoversFile(filePath: string): Promise<void> {
+  const { projectRoot, setProject } = useAppStore.getState();
+  const inside =
+    projectRoot !== null &&
+    (filePath.startsWith(projectRoot + "/") || filePath === projectRoot);
+  if (inside) return;
+  const root = filePath.slice(0, filePath.lastIndexOf("/"));
+  if (!root) return;
+  try {
+    const tree = await readDirTree(root);
+    setProject(root, tree);
+    void startWatching(root);
+    if (!useAppStore.getState().showExplorer) {
+      useAppStore.getState().toggleExplorer();
+    }
+  } catch (e) {
+    // 目录读不了(已删除等):不打断打开流程
+    console.warn("[velora] 设为项目根失败:", e);
   }
 }
 

@@ -16,6 +16,7 @@ import { FormattingKeymap } from "./extensions/FormattingKeymap";
 import { SourceMarkers } from "./extensions/sourceMarkers";
 import { Mermaid } from "./extensions/mermaid";
 import { Svg, SvgBlockParser } from "./extensions/svg";
+import { Html, HtmlBlockParser } from "./extensions/htmlblock";
 import { BlockHandle } from "./BlockHandle";
 import { SelectionAIToolbar } from "./SelectionAIToolbar";
 import { isProgrammaticUpdate, registerEditor, scheduleAutoSave } from "./editorController";
@@ -26,6 +27,7 @@ import "./extensions/aiPreview/aiPreview.css";
 import "./extensions/toc/toc.css";
 import "./extensions/mermaid/mermaid.css";
 import "./extensions/svg/svg.css";
+import "./extensions/htmlblock/htmlblock.css";
 import "./ai-toolbar.css";
 
 const WELCOME_MARKDOWN = `---
@@ -214,6 +216,8 @@ export function VeloraEditor() {
       Toc,
       Svg,
       SvgBlockParser,
+      Html,
+      HtmlBlockParser,
       Mathematics,
       FormattingKeymap,
       SourceMarkers,

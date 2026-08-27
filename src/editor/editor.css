@@ -16,6 +16,11 @@
   outline: none;
 }
 
+/* 超宽内容在列内横向滚动,而不是撑破或被裁切(tiptap renderWrapper 产出 wrapper) */
+.velora-editor .ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+
 /* ── 标题 ─────────────────────────── */
 .velora-editor h1 {
   font-size: 1.9em;

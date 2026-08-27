@@ -31,6 +31,7 @@ import { installWheelZoom, restoreZoom, useUiZoomStore } from "./settings/uiZoom
 import { useRecentStore } from "./settings/recentStore";
 import { pathFromHash } from "./platform/multiWindow";
 import { onFileDrop, pickDroppedMarkdown } from "./platform/dragDrop";
+import { useEditorWidthToken } from "./settings/editorWidth";
 
 export default function App() {
   const theme = useAppStore((s) => s.theme);
@@ -43,6 +44,9 @@ export default function App() {
   const searchOpen = useAppStore((s) => s.searchPanelOpen);
   const logOpen = useAppStore((s) => s.logPanelOpen);
   const zoomSvg = useAppStore((s) => s.zoomSvg);
+
+  // 编辑器列宽上限设置 → 根元素 Design Token
+  useEditorWidthToken();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;

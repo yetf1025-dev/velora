@@ -6,7 +6,7 @@ import { complete } from "../ai/aiService";
 import { useAiStore } from "../ai/aiStore";
 import { getProvider, PROVIDERS } from "../ai/providers";
 import { useAppStore } from "../state/appStore";
-import { usePrefsStore } from "../settings/prefsStore";
+import { usePrefsStore, EDITOR_WIDTH_MIN, EDITOR_WIDTH_MAX, EDITOR_WIDTH_DEFAULT } from "../settings/prefsStore";
 import { useRecentStore } from "../settings/recentStore";
 import {
   comboFromEvent,
@@ -156,6 +156,48 @@ function GeneralTab() {
       <p className="mt-2 text-[11px]" style={{ color: "var(--vl-text-faint)" }}>
         自动保存只对已经保存过的文件生效;新文档请先 ⌘S 选择保存位置。
       </p>
+
+      <div className="vl-settings-label mt-4">编辑器宽度</div>
+      <EditorWidthControl />
+    </div>
+  );
+}
+
+/** 编辑器正文列宽上限滑块;实际列宽还会随窗口/两侧面板自动收缩(不溢出) */
+function EditorWidthControl() {
+  const editorMaxWidth = usePrefsStore((s) => s.editorMaxWidth);
+  const setEditorMaxWidth = usePrefsStore((s) => s.setEditorMaxWidth);
+  const customized = editorMaxWidth !== EDITOR_WIDTH_DEFAULT;
+
+  return (
+    <div className="flex items-center gap-3 text-xs" style={{ color: "var(--vl-text)" }}>
+      <input
+        type="range"
+        min={EDITOR_WIDTH_MIN}
+        max={EDITOR_WIDTH_MAX}
+        step={20}
+        value={editorMaxWidth}
+        onChange={(e) => setEditorMaxWidth(Number(e.target.value))}
+        className="w-44"
+        style={{ accentColor: "var(--vl-accent)" }}
+        aria-label="编辑器正文列宽上限"
+      />
+      <span className="tabular-nums" style={{ color: "var(--vl-text-muted)", minWidth: 56 }}>
+        {editorMaxWidth} px
+      </span>
+      {customized && (
+        <button
+          type="button"
+          className="rounded border px-2 py-0.5 text-[11px]"
+          style={{
+            borderColor: "var(--vl-border)",
+            color: "var(--vl-text-muted)",
+          }}
+          onClick={() => setEditorMaxWidth(EDITOR_WIDTH_DEFAULT)}
+        >
+          重置
+        </button>
+      )}
     </div>
   );
 }

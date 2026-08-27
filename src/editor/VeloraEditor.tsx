@@ -202,7 +202,10 @@ export function VeloraEditor() {
       Image,
       TaskList,
       TaskItem.configure({ nested: true }),
-      TableKit,
+      // renderWrapper:true 给每个表包一层 div.tableWrapper(DOM 层,schema
+      // 与 Markdown 序列化不受影响);配合 CSS 让超宽表格在列内横向滚动,
+      // 而不是撑破或被外层裁切
+      TableKit.configure({ table: { renderWrapper: true } }),
       Mermaid,
       Details,
       AiPreview,
@@ -263,12 +266,15 @@ export function VeloraEditor() {
   }, [editor]);
 
   return (
-    <div className="h-full overflow-y-auto">
+    // min-w-0:flex 链路上任一层缺它,内容都会把面板撑破(横向溢出)
+    <div className="h-full min-w-0 overflow-y-auto overflow-x-hidden">
       <div
         ref={columnRef}
         className="relative mx-auto w-full py-12"
         style={{
-          maxWidth: "calc(var(--vl-editor-width) + var(--vl-editor-padding) * 2)",
+          // 上限 = 用户设置 + 两侧 padding;min(100%) 保证两侧面板拖宽、
+          // 窗口缩小、滚动条挤占时列宽自动收缩,不产生横向溢出
+          maxWidth: "min(calc(var(--vl-editor-width) + var(--vl-editor-padding) * 2), 100%)",
           paddingLeft: "var(--vl-editor-padding)",
           paddingRight: "var(--vl-editor-padding)",
         }}

@@ -32,7 +32,8 @@
 
   /* 编辑器 */
   --vl-editor-bg: var(--vl-bg);
-  --vl-editor-width: 760px;
+  /* 正文列宽上限(设置项运行时写回;列容器会 min(token, 100%) 兜底不溢出) */
+  --vl-editor-width: 1080px;
   --vl-editor-padding: 48px;
   --vl-code-bg: #f4f4f5;
   --vl-code-text: #18181b;

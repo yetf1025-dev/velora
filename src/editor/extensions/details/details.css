@@ -34,6 +34,8 @@
 
 .vl-details-summary {
   flex: 1;
+  /* flex 子项默认 min-width:auto 不许收缩到内容以下,极窄列会被撑破 */
+  min-width: 0;
   border: none;
   background: transparent;
   font-family: var(--vl-font-prose);

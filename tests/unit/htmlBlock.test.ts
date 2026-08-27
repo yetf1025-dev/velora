@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { hasUnrecognizedHtmlTag } from "../../src/editor/extensions/htmlblock/HtmlNode";
-import { sanitizeHtmlFragment } from "../../src/editor/extensions/htmlblock/HtmlBlockView";
+import {
+  hasUnrecognizedHtmlTag,
+  isEscapedHtmlBlock,
+  decodeEscapedHtml,
+} from "../../src/editor/extensions/htmlblock/HtmlNode";
+import {
+  sanitizeHtmlFragment,
+  resolveRenderableHtml,
+} from "../../src/editor/extensions/htmlblock/HtmlBlockView";
 
 /** tokenizer 预判:含 schema 外标签的 HTML 才需要 htmlBlock fallback */
 describe("hasUnrecognizedHtmlTag", () => {
@@ -56,5 +63,36 @@ describe("sanitizeHtmlFragment", () => {
     expect(out).toContain('style="text-align: center; font-weight: bold;"');
     expect(out).toContain("<font");
     expect(out).toContain("标题");
+  });
+});
+
+/** 二次转义形态(AI 生成/网页复制):&lt;p&gt;…&lt;/p&gt; 解码后可渲染 */
+describe("escaped html block", () => {
+  it("识别转义 HTML 块", () => {
+    expect(
+      isEscapedHtmlBlock('&lt;p style="text-align:center;"&gt;\n&lt;font size=10&gt;\n标题\n&lt;/font&gt;\n&lt;/p&gt;'),
+    ).toBe(true);
+    // 非 HTML 的普通实体(数学、箭头)不算
+    expect(isEscapedHtmlBlock("1 &lt; 2 &amp;&amp; 3 &gt; 2")).toBe(false);
+  });
+
+  it("解码还原真实 HTML", () => {
+    expect(decodeEscapedHtml("&lt;p style=&quot;a&quot;&gt;x&lt;/p&gt;")).toBe('<p style="a">x</p>');
+  });
+
+  it("resolveRenderableHtml:转义块解码、原生块原样", () => {
+    const esc = "&lt;font size=10&gt;标题&lt;/font&gt;";
+    expect(resolveRenderableHtml(esc)).toBe("<font size=10>标题</font>");
+    const native = '<p style="color:red">x</p>';
+    expect(resolveRenderableHtml(native)).toBe(native);
+  });
+
+  it("解码后的转义块经净化仍保留样式(端到端形态)", () => {
+    const esc =
+      '&lt;p style="text-align:center; font-weight:bold;"&gt;\n&lt;font size=10&gt;\nLC RGW 删除/转移优先级调度特性设计文档\n&lt;/font&gt;\n&lt;/p&gt;';
+    const out = sanitizeHtmlFragment(resolveRenderableHtml(esc));
+    expect(out).toContain("text-align:center");
+    expect(out).toContain("size=\"10\"");
+    expect(out).toContain("LC RGW 删除/转移优先级调度特性设计文档");
   });
 });

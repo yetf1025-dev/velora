@@ -10,6 +10,7 @@
  */
 import { useEffect, useRef } from "react";
 import { NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
+import { decodeEscapedHtml, isEscapedHtmlBlock } from "./HtmlNode";
 
 /** 危险元素:整棵子树剔除 */
 const DANGEROUS_TAGS =
@@ -33,6 +34,11 @@ export function sanitizeHtmlFragment(html: string): string {
   return doc.body.innerHTML;
 }
 
+/** attrs.html → 可渲染 HTML:整段实体转义的先解码(AI 生成/网页复制的二次转义) */
+export function resolveRenderableHtml(raw: string): string {
+  return isEscapedHtmlBlock(raw) ? decodeEscapedHtml(raw) : raw;
+}
+
 export function HtmlBlockView({ node }: NodeViewProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const shadowRef = useRef<ShadowRoot | null>(null);
@@ -49,7 +55,7 @@ export function HtmlBlockView({ node }: NodeViewProps) {
       root = host.attachShadow({ mode: "closed" });
       shadowRef.current = root;
     }
-    root.innerHTML = sanitizeHtmlFragment(html);
+    root.innerHTML = sanitizeHtmlFragment(resolveRenderableHtml(html));
     return () => {
       root.innerHTML = "";
     };

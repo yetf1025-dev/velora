@@ -32,6 +32,39 @@ const SCHEMA_TAGS =
 
 const VOID_TAGS = /^(?:hr|img|br|input|meta|link|area|base|col|embed|source|track|wbr)$/;
 
+/**
+ * 转义形态的块捕获:首行 &lt;tag...&gt; 开,逐行扫描到 &lt;/tag&gt; 计数平衡。
+ * 块内允许任意行(含尾随空格的 markdown 硬换行)。
+ */
+function tokenizeEscapedHtml(src: string): { type: string; raw: string } | undefined {
+  const firstNl = src.indexOf("\n");
+  const firstLine = src.slice(0, firstNl === -1 ? src.length : firstNl);
+  const openM = firstLine.match(/^&lt;\s*([a-zA-Z][a-zA-Z0-9-]*)[^&]*&gt;/);
+  if (!openM) return undefined;
+  const tag = openM[1];
+  // 逐行累计,直到该标签的开/闭实体计数平衡
+  const lines = src.split("\n");
+  let opens = 0;
+  let closes = 0;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    opens += (line.match(new RegExp(`&lt;\\s*${tag}(?=[\\s&])`, "gi")) ?? []).length;
+    closes += (line.match(new RegExp(`&lt;/\\s*${tag}\\s*&gt;`, "gi")) ?? []).length;
+    if (opens > 0 && opens === closes) {
+      let raw = lines.slice(0, i + 1).join("\n");
+      // 吞掉块后的硬换行标记(行尾空格由块内行自行保留)
+      return { type: "htmlBlock", raw };
+    }
+    // 块内出现明显的 markdown 结构行(标题/列表/表格/引用/代码栅栏)→ 块已断;
+    // 纯文本行允许(那是 HTML 的内文,如标题文字)。
+    // 反引号用 \x60:字面量里裸写三连反引号会被部分解析器误读为模板串
+    if (i > 0 && /^(#{1,6}\s|[-*+]\s|\d+\.\s|>|\||\x60{3}|~~~)/.test(line.trim())) {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 export function hasUnrecognizedHtmlTag(html: string): boolean {
   const tagRe = /<\/?\s*([a-zA-Z][a-zA-Z0-9-]*)/g;
   let m: RegExpExecArray | null;
@@ -42,6 +75,25 @@ export function hasUnrecognizedHtmlTag(html: string): boolean {
     if (!SCHEMA_TAGS.test(name)) return true;
   }
   return false;
+}
+
+/**
+ * 判定文本是否是「整段被实体转义的 HTML」(如 &lt;p style=...&gt;…&lt;/p&gt;)。
+ * 这类内容多来自 AI 生成/网页复制环节的二次转义;解码后是合法 HTML 块。
+ * 序列化保持转义形态回写,不改动用户的文件。
+ */
+export function isEscapedHtmlBlock(text: string): boolean {
+  return /&lt;[a-zA-Z][^&]*&gt;/.test(text) && text.includes("&lt;/");
+}
+
+/** 解码实体,得到真实 HTML(仅用于渲染;attrs.html 仍存原文) */
+export function decodeEscapedHtml(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
 }
 
 export const HtmlBlock = Node.create({
@@ -100,9 +152,19 @@ export const HtmlBlockParser = Extension.create({
     name: "htmlBlock",
     level: "block",
     start(src: string): number {
-      return src.match(/^<[a-zA-Z][\s>]/m)?.index ?? -1;
+      const real = src.match(/^<[a-zA-Z][\s>]/m)?.index ?? -1;
+      const escaped = src.match(/^&lt;[a-zA-Z]/m)?.index ?? -1;
+      if (real === -1) return escaped;
+      if (escaped === -1) return real;
+      return Math.min(real, escaped);
     },
     tokenize(src: string) {
+      // ── 形态二:整段实体转义的 HTML(&lt;p style=...&gt; … &lt;/p&gt;)──
+      // 多见于 AI 生成/网页复制产物;解码后是合法 HTML 块
+      const esc = tokenizeEscapedHtml(src);
+      if (esc) return esc;
+
+      // ── 形态一:原生 HTML ──
       const nl = src.indexOf("\n");
       const line = src.slice(0, nl === -1 ? src.length : nl);
       const openMatch = line.match(/^<([a-zA-Z][a-zA-Z0-9-]*)([\s>])/);

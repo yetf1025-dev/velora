@@ -3,6 +3,7 @@ import type { NodeViewProps } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { AlertTriangle, Code, ZoomIn } from "lucide-react";
 import { readTextFile, writeTextFile } from "../../../platform/fileService";
+import { resolveRelative } from "../../../platform/assetPath";
 import { useAppStore } from "../../../state/appStore";
 import { useSvgRefreshStore } from "./svgRefresh";
 
@@ -191,18 +192,4 @@ export function SvgView({
 
     </NodeViewWrapper>
   );
-}
-
-/** 解析相对当前文档的资源路径(浏览器环境无 path 库,手写规范化) */
-export function resolveRelative(baseFile: string, rel: string): string {
-  if (rel.startsWith("/")) return rel;
-  const baseDir = baseFile.slice(0, baseFile.lastIndexOf("/"));
-  const parts = (baseDir + "/" + rel).split("/");
-  const out: string[] = [];
-  for (const part of parts) {
-    if (part === "." || part === "") continue;
-    if (part === "..") out.pop();
-    else out.push(part);
-  }
-  return "/" + out.join("/");
 }

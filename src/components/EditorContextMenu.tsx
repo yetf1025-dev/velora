@@ -9,7 +9,7 @@ import { exportTextFile, readTextFile } from "../platform/fileService";
 import { useAppStore } from "../state/appStore";
 import { useAiChatStore } from "../ai/aiChatStore";
 import { useSvgRefreshStore } from "../editor/extensions/svg/svgRefresh";
-import { resolveRelative } from "../editor/extensions/svg/SvgView";
+import { resolveRelative } from "../platform/assetPath";
 
 /**
  * 编辑器右键菜单(替代浏览器默认菜单),按上下文变化:

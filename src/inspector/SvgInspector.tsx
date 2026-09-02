@@ -6,7 +6,7 @@ import { aiOnSvg } from "../ai/aiService";
 import { usePendingAiStore } from "../ai/pendingAiStore";
 import { useAppStore } from "../state/appStore";
 import { useSvgRefreshStore } from "../editor/extensions/svg/svgRefresh";
-import { resolveRelative } from "../editor/extensions/svg/SvgView";
+import { resolveRelative } from "../platform/assetPath";
 import { SvgCanvasEditor } from "../editor/extensions/svg/SvgCanvasEditor";
 
 /** SVG Inspector:选中 SVG 节点时的上下文面板(导出 + AI 修改源码) */

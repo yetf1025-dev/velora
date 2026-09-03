@@ -12,6 +12,7 @@
 import { generateHTML } from "@tiptap/core";
 import type { JSONContent } from "@tiptap/core";
 import { veloraBaseExtensions } from "../editor/extensions";
+import { resolveRelative } from "../platform/assetPath";
 import { renderDiagram } from "../diagram/engine";
 import { resolveThemeId } from "../diagram/themes";
 import { readTextFile } from "../platform/fileService";
@@ -95,19 +96,6 @@ async function resolveSvg(
     }
   }
   return `<span class="svg-missing">SVG 文件缺失:${escapeHtml(src)}</span>`;
-}
-
-function resolveRelative(baseFile: string, rel: string): string {
-  if (rel.startsWith("/")) return rel;
-  const baseDir = baseFile.slice(0, baseFile.lastIndexOf("/"));
-  const parts = (baseDir + "/" + rel).split("/");
-  const out: string[] = [];
-  for (const part of parts) {
-    if (part === "." || part === "") continue;
-    if (part === "..") out.pop();
-    else out.push(part);
-  }
-  return "/" + out.join("/");
 }
 
 function escapeHtml(text: string): string {

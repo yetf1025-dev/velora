@@ -1,6 +1,6 @@
-/** resolveRelative:相对文档路径解析(Windows 反斜杠/盘符回归) */
+/** resolveRelative/parentDir:相对文档路径解析(Windows 反斜杠/盘符回归) */
 import { describe, expect, it } from "vitest";
-import { resolveRelative } from "../../src/platform/assetPath";
+import { resolveRelative, parentDir } from "../../src/platform/assetPath";
 
 describe("resolveRelative", () => {
   it("POSIX 文档路径 + 相对引用(旧行为不变)", () => {
@@ -29,5 +29,20 @@ describe("resolveRelative", () => {
 
   it("./ 与重复斜杠折叠", () => {
     expect(resolveRelative("D:/a/b/c.md", "./d//e.svg")).toBe("D:/a/b/d/e.svg");
+  });
+});
+
+describe("parentDir", () => {
+  it("POSIX 路径取父目录", () => {
+    expect(parentDir("/home/u/docs/design.md")).toBe("/home/u/docs");
+  });
+
+  it("Windows 反斜杠路径取父目录(拖拽自动挂载项目根用)", () => {
+    expect(parentDir("D:\\code\\doc\\design.md")).toBe("D:/code/doc");
+  });
+
+  it("裸文件名 / 根路径返回 null", () => {
+    expect(parentDir("design.md")).toBeNull();
+    expect(parentDir("/design.md")).toBeNull();
   });
 });

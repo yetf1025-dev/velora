@@ -30,3 +30,15 @@ export function resolveRelative(baseFile: string, rel: string): string {
   const baseDir = cut === -1 ? "" : base.slice(0, cut);
   return fold(baseDir + "/" + r);
 }
+
+/**
+ * 文件所在目录(规范化为正斜杠;无分隔符的裸文件名返回 null)。
+ * Windows 反斜杠路径同样正确(切父目录别再手写 lastIndexOf("/"),
+ * 否则会重蹈 resolveRelative 的截断事故)。
+ */
+export function parentDir(filePath: string): string | null {
+  const normalized = filePath.replace(/\\/g, "/");
+  const cut = normalized.lastIndexOf("/");
+  if (cut <= 0) return null;
+  return normalized.slice(0, cut);
+}

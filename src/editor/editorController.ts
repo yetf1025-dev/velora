@@ -113,11 +113,13 @@ export async function openFilePath(path: string): Promise<void> {
  */
 async function ensureProjectCoversFile(filePath: string): Promise<void> {
   const { projectRoot, setProject } = useAppStore.getState();
+  // 统一成正斜杠再比较/切分:Windows 反斜杠路径下 startsWith/lastIndexOf 都会失灵
+  const norm = filePath.replace(/\\/g, "/");
+  const rootNorm = projectRoot?.replace(/\\/g, "/") ?? null;
   const inside =
-    projectRoot !== null &&
-    (filePath.startsWith(projectRoot + "/") || filePath === projectRoot);
+    rootNorm !== null && (norm.startsWith(rootNorm + "/") || norm === rootNorm);
   if (inside) return;
-  const root = filePath.slice(0, filePath.lastIndexOf("/"));
+  const root = norm.slice(0, norm.lastIndexOf("/"));
   if (!root) return;
   try {
     const tree = await readDirTree(root);

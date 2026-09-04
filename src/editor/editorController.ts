@@ -28,12 +28,32 @@ let editorInstance: Editor | null = null;
 /** 程序化 setContent 期间为 true:不标脏、不触发自动保存 */
 let programmaticUpdate = false;
 
+/** 系统打开请求(双击文件)早于编辑器就绪时暂存,registerEditor 后补开 */
+let pendingSystemOpen: string | null = null;
+
 export function isProgrammaticUpdate(): boolean {
   return programmaticUpdate;
 }
 
 export function registerEditor(editor: Editor | null) {
   editorInstance = editor;
+  // 冷启动双击文件:事件先于编辑器挂载到达,这里补开
+  if (editor && pendingSystemOpen) {
+    const p = pendingSystemOpen;
+    pendingSystemOpen = null;
+    void openFilePath(p);
+  }
+}
+
+/** 系统打开请求入口(双击文件/Finder 打开方式)。
+ * 编辑器未就绪(冷启动)时暂存,就绪后自动补开 */
+export function openFromSystem(path: string): void {
+  if (!isMarkdownPath(path)) return;
+  if (editorInstance) {
+    void openFilePath(path);
+  } else {
+    pendingSystemOpen = path;
+  }
 }
 
 export function getEditor(): Editor | null {

@@ -31,6 +31,8 @@ import { installWheelZoom, restoreZoom, useUiZoomStore } from "./settings/uiZoom
 import { useRecentStore } from "./settings/recentStore";
 import { pathFromHash } from "./platform/multiWindow";
 import { onFileDrop, pickDroppedMarkdown } from "./platform/dragDrop";
+import { onSystemOpenPath } from "./platform/openFromSystem";
+import { openFromSystem } from "./editor/editorController";
 import { useEditorWidthToken } from "./settings/editorWidth";
 
 export default function App() {
@@ -181,6 +183,14 @@ export default function App() {
       },
       setDropHover,
     );
+  }, []);
+
+  // 双击文件 / Finder「打开方式」(macOS Opened 事件、Windows argv)
+  useEffect(() => {
+    return onSystemOpenPath((paths) => {
+      const md = paths.find((p) => /\.md|\.markdown/i.test(p));
+      if (md) openFromSystem(md);
+    });
   }, []);
 
   return (

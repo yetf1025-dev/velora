@@ -493,6 +493,50 @@ pub fn run() {
             log_clear,
             log_file_path
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .setup(|_app| {
+            // Windows/Linux:双击文件启动时路径在 argv 里(首个非程序自身参数)
+            #[cfg(not(target_os = "macos"))]
+            {
+                let files: Vec<String> = std::env::args()
+                    .skip(1)
+                    .filter(|a| !a.starts_with('-'))
+                    .filter(|a| Path::new(a).is_file())
+                    .collect();
+                if !files.is_empty() {
+                    emit_to_target_window(_app, &files);
+                }
+            }
+            Ok(())
+        })
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, _event| {
+            // macOS:双击文件/Finder「打开方式」走 Opened 事件
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = _event {
+                let files: Vec<String> = urls
+                    .iter()
+                    .filter_map(|u| u.to_file_path().ok())
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect();
+                if !files.is_empty() {
+                    emit_to_target_window(_app, &files);
+                }
+            }
+        });
+}
+
+/// 系统打开请求路由到单个窗口:聚焦窗口优先(用户正在看的窗口响应,
+/// 与拖拽/⌘O 的直觉一致);冷启动无聚焦窗口时回落到主窗口 "main"。
+fn emit_to_target_window(app: &tauri::AppHandle, files: &[String]) {
+    let payload = files.join("\u{1f}");
+    let windows = app.webview_windows();
+    let target = windows
+        .values()
+        .find(|w| w.is_focused().unwrap_or(false))
+        .cloned()
+        .or_else(|| app.get_webview_window("main"));
+    if let Some(win) = target {
+        let _ = win.emit_to(win.label(), "system-open-path", payload);
+    }
 }
